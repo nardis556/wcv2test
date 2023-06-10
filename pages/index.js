@@ -4,6 +4,19 @@ import { v1 as uuidv1 } from "uuid";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { ethers } from "ethers";
 
+
+/**
+Order input example:
+{
+  "market": "USDT-USDC",
+  "nonce": "3ebb6ba0-0712-11ee-a183-032e8f54ac8a",
+  "quantity": "33.06375000",
+  "side": "buy",
+  "type": "market",
+  "wallet": "0xef4d9010289f51be2b49864b5db8a01705e6348b"
+}
+*/
+
 export default function Home() {
   const [account, setAccount] = useState("");
   const [message, setMessage] = useState("");
@@ -13,7 +26,7 @@ export default function Home() {
 
   async function connectWallet() {
     const provider = await EthereumProvider.init({
-      projectId: process.env.PROJECT_ID,
+      projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
       chains: [137],
       showQrModal: true,
       rpcMap: {
