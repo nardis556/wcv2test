@@ -9,7 +9,6 @@ import {
   Heading,
   Box,
 } from "@chakra-ui/react";
-import * as uuid from 'uuid'
 
 /**
 Order input example:
@@ -172,8 +171,6 @@ export default function Home() {
       console.error("Invalid orderParams");
       return null;
     }
-
-    !orderParams.nonce ? (orderParams.nonce = uuid.v1()) : null;
 
     const nonceAsByteArray = ethers.utils.arrayify(
       `0x${orderParams.nonce.replace(/-/g, "")}`
