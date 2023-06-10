@@ -8,19 +8,10 @@ import {
   VStack,
   Heading,
   Box,
+  Container,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
-
-/**
-Order input example:
-{
-  "market": "USDT-USDC",
-  "nonce": "3ebb6ba0-0712-11ee-a183-032e8f54ac8a",
-  "quantity": "33.06375000",
-  "side": "buy",
-  "type": "market",
-  "wallet": "0xef4d9010289f51be2b49864b5db8a01705e6348b"
-}
-*/
 
 const defaultTrade = {
   market: "USDT-USDC",
@@ -248,51 +239,39 @@ export default function Home() {
   }
 
   return (
-    <VStack spacing={5} p={10} alignItems="stretch">
-      <Heading>walletConnect v2 test</Heading>
-      {provider ? (
-        <>
-          <Button colorScheme="blue" onClick={disconnectWallet}>
-            Disconnect Wallet
-          </Button>
-          <Button colorScheme="blue" onClick={send0MaticSelf}>
-            Send 0 MATIC Self Transaction
-          </Button>
-          <Button colorScheme="blue" onClick={send001Matic0xf69}>
-            Send 0.001 MATIC to 0xF69
-          </Button>
-          <Button colorScheme="blue" onClick={sendToken}>
-            Send 0.001 IDEX to 0xF69
-          </Button>
-          <Box>
-            <Textarea
-              placeholder="Sign unlock request from IDEX"
-              value={unlock}
-              onChange={(e) => setUnlock(e.target.value)}
-            />
-            <Button colorScheme="blue" onClick={signMessage}>
-              Sign Unlock
-            </Button>
-          </Box>
-          <Box>
-            <Textarea
-              placeholder="Enter trade parameters as JSON"
-              value={trade}
-              onChange={(e) => setTrade(e.target.value)}
-            />
-            <Button colorScheme="blue" onClick={signTrade}>
-              Sign Trade
-            </Button>
-          </Box>
-          <Button colorScheme="blue" onClick={clearLocalStorage}>
-            Clear Local Storage and Disconnect
-          </Button>
-        </>
-      ) : (
-        <Button colorScheme="blue" onClick={connectWallet}>
-          Connect Wallet
-        </Button>
-      )}
-    </VStack>
+    <Container maxW="container.md" centerContent>
+      <Heading my={10} size="2xl" textAlign="center">WalletConnect v2 Test</Heading>
+      <Stack spacing={6} w="100%">
+        {provider ? (
+          <>
+            <Button colorScheme="teal" onClick={disconnectWallet} size="lg" w="100%">Disconnect Wallet</Button>
+            <Button colorScheme="green" onClick={send0MaticSelf} size="lg" w="100%">Send 0 MATIC Self Transaction</Button>
+            <Button colorScheme="purple" onClick={send001Matic0xf69} size="lg" w="100%">Send 0.001 MATIC to 0xF69</Button>
+            <Button colorScheme="pink" onClick={sendToken} size="lg" w="100%">Send 0.001 IDEX to 0xF69</Button>
+            <Box>
+              <Textarea
+                placeholder="Sign unlock request from IDEX"
+                value={unlock}
+                onChange={(e) => setUnlock(e.target.value)}
+                size="lg"
+              />
+              <Button colorScheme="blue" onClick={signMessage} size="lg" mt={2} w="100%">Sign Unlock</Button>
+            </Box>
+            <Box>
+              <Textarea
+                placeholder="Enter trade parameters as JSON"
+                value={trade}
+                onChange={(e) => setTrade(e.target.value)}
+                size="lg"
+              />
+              <Button colorScheme="orange" onClick={signTrade} size="lg" mt={2} w="100%">Sign Trade</Button>
+            </Box>
+            <Button colorScheme="red" onClick={clearLocalStorage} size="lg" w="100%">Clear Local Storage and Disconnect</Button>
+          </>
+        ) : (
+          <Button colorScheme="blue" onClick={connectWallet} size="lg" w="100%">Connect Wallet</Button>
+        )}
+      </Stack>
+    </Container>
   );
 }
