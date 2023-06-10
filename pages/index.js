@@ -1,9 +1,15 @@
-
 import { useState } from "react";
-import { v1 as uuidv1 } from "uuid";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { ethers } from "ethers";
-
+import {
+  Button,
+  Input,
+  Textarea,
+  VStack,
+  Heading,
+  Box,
+} from "@chakra-ui/react";
+import uuidv1 from "uuid/v1";
 
 /**
 Order input example:
@@ -18,22 +24,26 @@ Order input example:
 */
 
 const defaultTrade = {
-  "market": "USDT-USDC",
-  "nonce": "3ebb6ba0-0712-11ee-a183-032e8f54ac8a",
-  "quantity": "33.06375000",
-  "side": "buy",
-  "type": "market",
-  "wallet": "0xef4d9010289f51be2b49864b5db8a01705e6348b"
+  market: "USDT-USDC",
+  nonce: "3ebb6ba0-0712-11ee-a183-032e8f54ac8a",
+  quantity: "33.06375000",
+  side: "buy",
+  type: "market",
+  wallet: "0xef4d9010289f51be2b49864b5db8a01705e6348b",
 };
 
+const defaultUnlock = `Hello from the IDEX team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
+
+Message: ea365a60-30c3-11ed-a65a-4fead7562786
+`
 
 export default function Home() {
   const [account, setAccount] = useState("");
   const [message, setMessage] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
+  const [unlock, setUnlock] = useState(defaultUnlock);
   const [provider, setProvider] = useState(null);
   const [web3Provider, setWeb3Provider] = useState(null);
-  
 
   async function connectWallet() {
     console.log("Connecting wallet...");
@@ -45,57 +55,116 @@ export default function Home() {
         137: "https://polygon-rpc.com",
       },
     });
-  
+
     await provider.enable();
-  
+
     const web3Provider = new ethers.providers.Web3Provider(provider);
     const signer = web3Provider.getSigner();
     const account = await signer.getAddress();
-  
+
     console.log("Wallet connected:", account);
-  
+
     setProvider(provider);
     setWeb3Provider(web3Provider);
     setAccount(account);
   }
-  
 
-  async function sendTransaction() {
+  function disconnectWallet() {
+    console.log("Disconnecting wallet...");
+    provider.disconnect();
+    setProvider(null);
+    setWeb3Provider(null);
+    setAccount("");
+    console.log("Wallet disconnected");
+    clearLocalStorage();
+    console.log("Local storage cleared");
+  }
+
+  // Other functions...
+
+  async function send0MaticSelf() {
     console.log("Sending transaction...");
     const transaction = {
       from: account,
       to: account,
       value: 0,
     };
-  
+
     console.log("Transaction details:", transaction);
+
+    const txHash = await provider.request({
+      method: "eth_sendTransaction",
+      params: [transaction],
+    });
+    console.log('SIGNED: send0MaticSelf');
+    console.log(`Transaction hash: ${txHash}`);
+  }
+
+  async function send001Matic0xf69() {
+    console.log("Sending transaction...");
+    const amountInWei = ethers.utils.parseUnits("0.001", "ether");
+    const transaction = {
+      from: account,
+      to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
+      value: ethers.utils.hexlify(amountInWei), 
+    };
   
     const txHash = await provider.request({
       method: "eth_sendTransaction",
       params: [transaction],
     });
   
+    console.log('SIGNED: send001Matic0xf69');
     console.log(`Transaction hash: ${txHash}`);
   }
-  
 
+  const ERC20_ABI = [
+    "function name() view returns (string)",
+    "function symbol() view returns (string)",
+    "function decimals() view returns (uint8)",
+    "function totalSupply() view returns (uint256)",
+  
+    "function balanceOf(address) view returns (uint256)",
+  
+    "function transfer(address to, uint256 value) returns (boolean)",
+  
+    "event Transfer(address indexed from, address indexed to, uint256 value)"
+  ];
+  
+  async function sendToken() {
+    console.log("Sending tokens...");
+  
+    const tokenContractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
+    const tokenContract = new ethers.Contract(tokenContractAddress, ERC20_ABI, web3Provider.getSigner());
+  
+    const decimals = await tokenContract.decimals();
+    const amountInTokenUnits = ethers.utils.parseUnits("0.001", decimals);
+    
+    const tx = await tokenContract.transfer("0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b", amountInTokenUnits);
+    const transaction = await tx.wait();
+  
+    console.log("SIGNED: sendToken");
+    console.log("Transaction hash:", transaction);
+  }
+  
   async function signMessage() {
     console.log("Signing message...");
     const params = [
-      ethers.utils.hexlify(ethers.utils.toUtf8Bytes(message)),
+      ethers.utils.hexlify(ethers.utils.toUtf8Bytes(defaultUnlock)),
       account,
     ];
-  
+
     console.log("Signature parameters:", params);
-  
+
     const signature = await provider.request({
       method: "personal_sign",
       params,
     });
-  
+
+    console.log('SIGNED: signMessage');
     console.log(`Signature: ${signature}`);
   }
-  
+
 
   async function createSigArray(orderParams) {
     console.log(orderParams);
@@ -103,6 +172,8 @@ export default function Home() {
       console.error("Invalid orderParams");
       return null;
     }
+
+    !orderParams.nonce ? (orderParams.nonce = uuidv1()) : null;
 
     const nonceAsByteArray = ethers.utils.arrayify(
       `0x${orderParams.nonce.replace(/-/g, "")}`
@@ -138,84 +209,93 @@ export default function Home() {
       console.error("Provider is not connected");
       return;
     }
-  
+
     console.log("Signing trade...");
     let tradeParams;
-  
+
     try {
       tradeParams = JSON.parse(trade);
     } catch (error) {
       console.error("Invalid trade parameters");
       return;
     }
-  
+
     console.log("Trade parameters:", tradeParams);
-  
+
     const sigArray = await createSigArray(tradeParams);
     if (!sigArray) {
       console.error("Failed to create signature array");
       return;
     }
-  
+
     const signatureParametersHash = await buildSigHashParams(sigArray);
     if (!signatureParametersHash) {
       console.error("Failed to build signature parameters hash");
       return;
     }
-  
+
     console.log("Signature parameters hash:", signatureParametersHash);
-  
+
     const signature = await provider.request({
       method: "personal_sign",
       params: [signatureParametersHash, account],
     });
-  
+    console.log('SIGNED: signTrade');
     console.log(`Signature: ${signature}`);
   }
-  
 
   function clearLocalStorage() {
+    console.log("Clearing local storage...");
     localStorage.clear();
+    window.location.reload();
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "20px",
-      }}
-    >
-      <div>
-      <button style={{ padding: "10px" }} onClick={connectWallet}>
-        Connect Wallet
-      </button>
-      </div>
-      <button style={{ padding: "10px" }} onClick={sendTransaction}>
-        Send Transaction
-      </button>
-      <input
-        style={{ padding: "10px", width: "300px" }}
-        placeholder="Enter message to sign"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-      />
-      <button style={{ padding: "10px" }} onClick={signMessage}>
-        Sign Message
-      </button>
-      <textarea
-        style={{ padding: "10px", width: "500px", height: "160px" }}
-        placeholder="Enter trade parameters as JSON"
-        value={trade}
-        onChange={(e) => setTrade(e.target.value)}
-      />
-      <button style={{ padding: "10px" }} onClick={signTrade}>
-        Sign Trade
-      </button>
-      <button style={{ padding: "10px" }} onClick={clearLocalStorage}>
-        Clear Local Storage
-      </button>
-    </div>
+    <VStack spacing={5} p={10} alignItems="stretch">
+      <Heading>walletConnect v2 test</Heading>
+      {provider ? (
+        <>
+          <Button colorScheme="blue" onClick={disconnectWallet}>
+            Disconnect Wallet
+          </Button>
+          <Button colorScheme="blue" onClick={send0MaticSelf}>
+            Send 0 MATIC Self Transaction
+          </Button>
+          <Button colorScheme="blue" onClick={send001Matic0xf69}>
+            Send 0.001 MATIC to 0xF69
+          </Button>
+          <Button colorScheme="blue" onClick={sendToken}>
+            Send 0.001 IDEX to 0xF69
+          </Button>
+          <Box>
+            <Textarea
+              placeholder="Sign unlock request from IDEX"
+              value={unlock}
+              onChange={(e) => setUnlock(e.target.value)}
+            />
+            <Button colorScheme="blue" onClick={signMessage}>
+              Sign Unlock
+            </Button>
+          </Box>
+          <Box>
+            <Textarea
+              placeholder="Enter trade parameters as JSON"
+              value={trade}
+              onChange={(e) => setTrade(e.target.value)}
+            />
+            <Button colorScheme="blue" onClick={signTrade}>
+              Sign Trade
+            </Button>
+          </Box>
+          <Button colorScheme="blue" onClick={clearLocalStorage}>
+            Clear Local Storage and Disconnect
+          </Button>
+        </>
+      ) : (
+        <Button colorScheme="blue" onClick={connectWallet}>
+          Connect Wallet
+        </Button>
+      )}
+    </VStack>
   );
 }
