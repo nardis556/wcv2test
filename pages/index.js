@@ -36,6 +36,7 @@ export default function Home() {
   
 
   async function connectWallet() {
+    console.log("Connecting wallet...");
     const provider = await EthereumProvider.init({
       projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
       chains: [137],
@@ -44,44 +45,57 @@ export default function Home() {
         137: "https://polygon-rpc.com",
       },
     });
-
+  
     await provider.enable();
-
+  
     const web3Provider = new ethers.providers.Web3Provider(provider);
     const signer = web3Provider.getSigner();
     const account = await signer.getAddress();
-
+  
+    console.log("Wallet connected:", account);
+  
     setProvider(provider);
     setWeb3Provider(web3Provider);
     setAccount(account);
   }
+  
 
   async function sendTransaction() {
+    console.log("Sending transaction...");
     const transaction = {
       from: account,
       to: account,
       value: 0,
     };
-
+  
+    console.log("Transaction details:", transaction);
+  
     const txHash = await provider.request({
       method: "eth_sendTransaction",
       params: [transaction],
     });
-
+  
     console.log(`Transaction hash: ${txHash}`);
   }
+  
 
   async function signMessage() {
+    console.log("Signing message...");
+    const params = [
+      ethers.utils.hexlify(ethers.utils.toUtf8Bytes(message)),
+      account,
+    ];
+  
+    console.log("Signature parameters:", params);
+  
     const signature = await provider.request({
       method: "personal_sign",
-      params: [
-        ethers.utils.hexlify(ethers.utils.toUtf8Bytes(message)),
-        account,
-      ],
+      params,
     });
-
+  
     console.log(`Signature: ${signature}`);
   }
+  
 
   async function createSigArray(orderParams) {
     console.log(orderParams);
@@ -124,35 +138,41 @@ export default function Home() {
       console.error("Provider is not connected");
       return;
     }
-
+  
+    console.log("Signing trade...");
     let tradeParams;
-
+  
     try {
       tradeParams = JSON.parse(trade);
     } catch (error) {
       console.error("Invalid trade parameters");
       return;
     }
-
+  
+    console.log("Trade parameters:", tradeParams);
+  
     const sigArray = await createSigArray(tradeParams);
     if (!sigArray) {
       console.error("Failed to create signature array");
       return;
     }
-
+  
     const signatureParametersHash = await buildSigHashParams(sigArray);
     if (!signatureParametersHash) {
       console.error("Failed to build signature parameters hash");
       return;
     }
-
+  
+    console.log("Signature parameters hash:", signatureParametersHash);
+  
     const signature = await provider.request({
       method: "personal_sign",
       params: [signatureParametersHash, account],
     });
-
+  
     console.log(`Signature: ${signature}`);
   }
+  
 
   function clearLocalStorage() {
     localStorage.clear();
