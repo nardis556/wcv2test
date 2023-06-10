@@ -9,7 +9,7 @@ import {
   Heading,
   Box,
 } from "@chakra-ui/react";
-import uuidv1 from "uuid/v1";
+import { v1 as uuidv1 } from 'uuid';
 
 /**
 Order input example:
