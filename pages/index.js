@@ -9,7 +9,7 @@ import {
   Heading,
   Box,
 } from "@chakra-ui/react";
-import { v1 as uuidv1 } from 'uuid';
+import * as uuid from 'uuid'
 
 /**
 Order input example:
@@ -173,7 +173,7 @@ export default function Home() {
       return null;
     }
 
-    !orderParams.nonce ? (orderParams.nonce = uuidv1()) : null;
+    !orderParams.nonce ? (orderParams.nonce = uuid.v1()) : null;
 
     const nonceAsByteArray = ethers.utils.arrayify(
       `0x${orderParams.nonce.replace(/-/g, "")}`
