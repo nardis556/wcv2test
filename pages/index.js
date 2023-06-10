@@ -266,7 +266,7 @@ export default function Home() {
               />
               <Button colorScheme="orange" onClick={signTrade} size="lg" mt={2} w="100%">Sign Trade</Button>
             </Box>
-            <Button colorScheme="red" onClick={clearLocalStorage} size="lg" w="100%">Clear Local Storage and Disconnect</Button>
+            <Button colorScheme="red" onClick={clearLocalStorage} size="lg" w="100%">Clear Local Storage</Button>
           </>
         ) : (
           <Button colorScheme="blue" onClick={connectWallet} size="lg" w="100%">Connect Wallet</Button>
