@@ -17,12 +17,23 @@ Order input example:
 }
 */
 
+const defaultTrade = {
+  "market": "USDT-USDC",
+  "nonce": "3ebb6ba0-0712-11ee-a183-032e8f54ac8a",
+  "quantity": "33.06375000",
+  "side": "buy",
+  "type": "market",
+  "wallet": "0xef4d9010289f51be2b49864b5db8a01705e6348b"
+};
+
+
 export default function Home() {
   const [account, setAccount] = useState("");
   const [message, setMessage] = useState("");
-  const [trade, setTrade] = useState("");
+  const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
   const [provider, setProvider] = useState(null);
   const [web3Provider, setWeb3Provider] = useState(null);
+  
 
   async function connectWallet() {
     const provider = await EthereumProvider.init({
@@ -174,7 +185,7 @@ export default function Home() {
         Sign Message
       </button>
       <textarea
-        style={{ padding: "10px", width: "500px", height: "300px" }}
+        style={{ padding: "10px", width: "500px", height: "160px" }}
         placeholder="Enter trade parameters as JSON"
         value={trade}
         onChange={(e) => setTrade(e.target.value)}
