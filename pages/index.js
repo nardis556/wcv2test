@@ -331,7 +331,7 @@ export default function Home() {
                 height={110}
               />
               <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
-                <InfoIcon color="blue.500" ml={2} />
+                <InfoIcon color="yellow.500" ml={2} />
               </Tooltip>
             </Flex>
             <Button
@@ -355,7 +355,7 @@ export default function Home() {
                 height={200}
               />
               <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
-                <InfoIcon color="orange.500" ml={2} />
+                <InfoIcon color="yellow.500" ml={2} />
               </Tooltip>
             </Flex>
             <Button
