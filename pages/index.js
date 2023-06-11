@@ -34,8 +34,7 @@ const defaultTrade = {
 
 const defaultUnlock = `Hello from the IDEX team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
 
-Message: ea365a60-30c3-11ed-a65a-4fead7562786
-`;
+Message: ea365a60-30c3-11ed-a65a-4fead7562786`;
 
 export default function Home() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -329,7 +328,7 @@ export default function Home() {
                 isDisabled={!provider}
                 bg={inputColor}
                 color={textColor}
-                height={100}
+                height={110}
               />
               <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
                 <InfoIcon color="blue.500" ml={2} />
