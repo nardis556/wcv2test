@@ -1,17 +1,27 @@
 import { useState } from "react";
-import { EthereumProvider } from "@walletconnect/ethereum-provider";
-import { ethers } from "ethers";
 import {
-  Button,
-  Input,
-  Textarea,
-  VStack,
-  Heading,
+  Avatar,
   Box,
+  Button,
   Container,
+  Flex,
+  Heading,
+  Input,
+  Spacer,
   Stack,
   Text,
+  Textarea,
+  Tooltip,
+  VStack,
+  useColorMode,
+  ChakraProvider,
+  ColorModeScript,
+  useColorModeValue,
 } from "@chakra-ui/react";
+import { InfoIcon } from "@chakra-ui/icons";
+import { EthereumProvider } from "@walletconnect/ethereum-provider";
+import { ethers } from "ethers";
+import styled from "@emotion/styled";
 
 const defaultTrade = {
   market: "USDT-USDC",
@@ -25,15 +35,22 @@ const defaultTrade = {
 const defaultUnlock = `Hello from the IDEX team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
 
 Message: ea365a60-30c3-11ed-a65a-4fead7562786
-`
+`;
 
 export default function Home() {
+  const { colorMode, toggleColorMode } = useColorMode();
   const [account, setAccount] = useState("");
   const [message, setMessage] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
   const [unlock, setUnlock] = useState(defaultUnlock);
   const [provider, setProvider] = useState(null);
   const [web3Provider, setWeb3Provider] = useState(null);
+
+  const backgroundColor = useColorModeValue("white", "#181818");
+  const textColor = useColorModeValue("black", "white");
+  const buttonColorScheme = useColorModeValue("blue", "teal");
+  const inputColor = useColorModeValue("gray.100", "gray.800");
+  const borderColor = useColorModeValue("gray.300", "gray.600");
 
   async function connectWallet() {
     console.log("Connecting wallet...");
@@ -86,7 +103,7 @@ export default function Home() {
       method: "eth_sendTransaction",
       params: [transaction],
     });
-    console.log('SIGNED: send0MaticSelf');
+    console.log("SIGNED: send0MaticSelf");
     console.log(`Transaction hash: ${txHash}`);
   }
 
@@ -96,15 +113,15 @@ export default function Home() {
     const transaction = {
       from: account,
       to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
-      value: ethers.utils.hexlify(amountInWei), 
+      value: ethers.utils.hexlify(amountInWei),
     };
-  
+
     const txHash = await provider.request({
       method: "eth_sendTransaction",
       params: [transaction],
     });
-  
-    console.log('SIGNED: send001Matic0xf69');
+
+    console.log("SIGNED: send001Matic0xf69");
     console.log(`Transaction hash: ${txHash}`);
   }
 
@@ -113,30 +130,37 @@ export default function Home() {
     "function symbol() view returns (string)",
     "function decimals() view returns (uint8)",
     "function totalSupply() view returns (uint256)",
-  
+
     "function balanceOf(address) view returns (uint256)",
-  
+
     "function transfer(address to, uint256 value) returns (boolean)",
-  
-    "event Transfer(address indexed from, address indexed to, uint256 value)"
+
+    "event Transfer(address indexed from, address indexed to, uint256 value)",
   ];
-  
+
   async function sendToken() {
     console.log("Sending tokens...");
-  
+
     const tokenContractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
-    const tokenContract = new ethers.Contract(tokenContractAddress, ERC20_ABI, web3Provider.getSigner());
-  
+    const tokenContract = new ethers.Contract(
+      tokenContractAddress,
+      ERC20_ABI,
+      web3Provider.getSigner()
+    );
+
     const decimals = await tokenContract.decimals();
     const amountInTokenUnits = ethers.utils.parseUnits("0.001", decimals);
-    
-    const tx = await tokenContract.transfer("0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b", amountInTokenUnits);
+
+    const tx = await tokenContract.transfer(
+      "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
+      amountInTokenUnits
+    );
     const transaction = await tx.wait();
-  
+
     console.log("SIGNED: sendToken");
     console.log("Transaction hash:", transaction);
   }
-  
+
   async function signMessage() {
     console.log("Signing message...");
     const params = [
@@ -151,10 +175,9 @@ export default function Home() {
       params,
     });
 
-    console.log('SIGNED: signMessage');
+    console.log("SIGNED: signMessage");
     console.log(`Signature: ${signature}`);
   }
-
 
   async function createSigArray(orderParams) {
     console.log(orderParams);
@@ -228,7 +251,7 @@ export default function Home() {
       method: "personal_sign",
       params: [signatureParametersHash, account],
     });
-    console.log('SIGNED: signTrade');
+    console.log("SIGNED: signTrade");
     console.log(`Signature: ${signature}`);
   }
 
@@ -239,39 +262,120 @@ export default function Home() {
   }
 
   return (
-    <Container maxW="container.md" centerContent>
-      <Heading my={10} size="2xl" textAlign="center">WalletConnect v2 Test</Heading>
-      <Stack spacing={6} w="100%">
-        {provider ? (
-          <>
-            <Button colorScheme="teal" onClick={disconnectWallet} size="lg" w="100%">Disconnect Wallet</Button>
-            <Button colorScheme="green" onClick={send0MaticSelf} size="lg" w="100%">Send 0 MATIC Self Transaction</Button>
-            <Button colorScheme="purple" onClick={send001Matic0xf69} size="lg" w="100%">Send 0.001 MATIC to 0xF69</Button>
-            <Button colorScheme="pink" onClick={sendToken} size="lg" w="100%">Send 0.001 IDEX to 0xF69</Button>
-            <Box>
+    <Container maxW="container.md">
+      <ColorModeScript initialColorMode="dark" />
+      <Flex justifyContent="space-between" alignItems="center" mb={4} >
+        <Heading my={5} size="md">
+          WalletConnect v2 Test (POLYGON MAINNET)
+        </Heading>
+        <Button onClick={toggleColorMode}>
+          {colorMode === "light" ? "Dark" : "Light"}
+        </Button>
+      </Flex>
+      <Flex justify="flex-end" mb={4}></Flex>
+      <Box
+        p={5}
+        shadow="md"
+        borderWidth="1px"
+        borderRadius="md"
+        w="100%"
+        bg={backgroundColor}
+        color={textColor}
+        borderColor={borderColor}
+      >
+        <Flex>
+          <Heading ml={4} size="md">
+            {account ? account : "No wallet connected"}
+          </Heading>
+          <Spacer />
+          {provider ? (
+            <Button colorScheme="red" onClick={disconnectWallet}>
+              Disconnect
+            </Button>
+          ) : (
+            <Button colorScheme={buttonColorScheme} onClick={connectWallet}>
+              Connect Wallet
+            </Button>
+          )}
+        </Flex>
+        <Stack spacing={6} mt={6}>
+          <Button
+            colorScheme={buttonColorScheme}
+            onClick={send0MaticSelf}
+            isDisabled={!provider}
+          >
+            Send 0 MATIC Self Transaction
+          </Button>
+          <Button
+            colorScheme={buttonColorScheme}
+            onClick={send001Matic0xf69}
+            isDisabled={!provider}
+          >
+            Send 0.001 MATIC to 0xF69
+          </Button>
+          <Button
+            colorScheme={buttonColorScheme}
+            onClick={sendToken}
+            isDisabled={!provider}
+          >
+            Send 0.001 USDT to 0xF69
+          </Button>
+          <Box>
+            <Flex alignItems="center">
               <Textarea
                 placeholder="Sign unlock request from IDEX"
                 value={unlock}
                 onChange={(e) => setUnlock(e.target.value)}
-                size="lg"
+                isDisabled={!provider}
+                bg={inputColor}
+                color={textColor}
+                height={100}
               />
-              <Button colorScheme="blue" onClick={signMessage} size="lg" mt={2} w="100%">Sign Unlock</Button>
-            </Box>
-            <Box>
+              <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
+                <InfoIcon color="blue.500" ml={2} />
+              </Tooltip>
+            </Flex>
+            <Button
+              colorScheme={buttonColorScheme}
+              onClick={signMessage}
+              mt={2}
+              isDisabled={!provider}
+            >
+              Sign Simulated Unlock
+            </Button>
+          </Box>
+          <Box>
+            <Flex alignItems="center">
               <Textarea
                 placeholder="Enter trade parameters as JSON"
                 value={trade}
                 onChange={(e) => setTrade(e.target.value)}
-                size="lg"
+                isDisabled={!provider}
+                bg={inputColor}
+                color={textColor}
+                height={200}
               />
-              <Button colorScheme="orange" onClick={signTrade} size="lg" mt={2} w="100%">Sign Trade</Button>
-            </Box>
-            <Button colorScheme="red" onClick={clearLocalStorage} size="lg" w="100%">Clear Local Storage</Button>
-          </>
-        ) : (
-          <Button colorScheme="blue" onClick={connectWallet} size="lg" w="100%">Connect Wallet</Button>
-        )}
-      </Stack>
+              <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
+                <InfoIcon color="orange.500" ml={2} />
+              </Tooltip>
+            </Flex>
+            <Button
+              colorScheme={buttonColorScheme}
+              onClick={signTrade}
+              mt={2}
+              isDisabled={!provider}
+            >
+              Sign Simulated Trade
+            </Button>
+          </Box>
+          <Button
+            colorScheme="red"
+            onClick={clearLocalStorage}
+          >
+            Clear Local Storage And Refresh
+          </Button>
+        </Stack>
+      </Box>
     </Container>
   );
 }
