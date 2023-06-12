@@ -86,8 +86,6 @@ export default function Home() {
     console.log("Local storage cleared");
   }
 
-  // Other functions...
-
   async function send0MaticSelf() {
     console.log("Sending transaction...");
     const transaction = {
@@ -284,7 +282,7 @@ export default function Home() {
       >
         <Flex>
           <Heading ml={4} size="md">
-            {account ? account : "No wallet connected"}
+            {account ? `${account.substring(0,5) + '~' + account.slice(-4)}` : "No wallet connected"}
           </Heading>
           <Spacer />
           {provider ? (
