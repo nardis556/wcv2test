@@ -12,10 +12,12 @@ import {
   useColorMode,
   ColorModeScript,
   useColorModeValue,
+  Spinner,
 } from "@chakra-ui/react";
 import { InfoIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { ethers } from "ethers";
+import { setTimeout } from "timers";
 
 const defaultTrade = {
   market: "USDT-USDC",
@@ -31,6 +33,7 @@ const defaultUnlock = `Hello from the IDEX team! Sign this message to prove you 
 Message: ea365a60-30c3-11ed-a65a-4fead7562786`;
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
   const { colorMode, toggleColorMode } = useColorMode();
   const [account, setAccount] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
@@ -46,6 +49,7 @@ export default function Home() {
 
   async function connectWallet() {
     console.log("Connecting wallet...");
+    setLoading(true);
     const provider = await EthereumProvider.init({
       projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
       chains: [137],
@@ -66,18 +70,15 @@ export default function Home() {
     setProvider(provider);
     setWeb3Provider(web3Provider);
     setAccount(account);
-
-    provider.on("message", (message) => {
-      console.log("Message received:", message);
-    });
-
-    if (provider) {
-      signMessage()
-    }
-
   }
 
-  async function disconnectWallet() {
+  function message() {
+    provider.on("message", (message) => {
+      console.log("MESSAGE:", message);
+    });
+  }
+
+  function disconnectWallet() {
     console.log("Disconnecting wallet...");
     provider.disconnect();
     setProvider(null);
@@ -119,6 +120,8 @@ export default function Home() {
       method: "eth_sendTransaction",
       params: [transaction],
     });
+
+    message();
 
     console.log("SIGNED: send001Matic0xf69");
     console.log(`Transaction hash: ${txHash}`);
@@ -291,7 +294,11 @@ export default function Home() {
               Disconnect
             </Button>
           ) : (
-            <Button colorScheme={buttonColorScheme} onClick={connectWallet}>
+            <Button
+              colorScheme={buttonColorScheme}
+              onClick={connectWallet}
+              isLoading={loading}
+            >
               Connect Wallet
             </Button>
           )}
@@ -337,7 +344,7 @@ export default function Home() {
               isDisabled={!provider}
             >
               Sign Simulated Unlock
-              <Tooltip label="Simulate Wallet Unlock. Also gets prompted on connect" aria-label="A tooltip">
+              <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
                 <InfoIcon color="yellow.500" ml={2} />
               </Tooltip>
             </Button>
