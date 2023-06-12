@@ -179,7 +179,6 @@ export default function Home() {
   }
 
   async function createSigArray(orderParams) {
-    console.log(orderParams);
     if (!orderParams || typeof orderParams !== "object") {
       console.error("Invalid orderParams");
       return null;
