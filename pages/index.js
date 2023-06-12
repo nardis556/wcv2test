@@ -207,7 +207,6 @@ export default function Home() {
   }
 
   const buildSigHashParams = async (signatureParameters) => {
-    console.log(signatureParameters);
     let fields = signatureParameters.map((param) => param[0]);
     let values = signatureParameters.map((param) => param[1]);
     return ethers.utils.solidityKeccak256(fields, values);
