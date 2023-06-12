@@ -99,12 +99,12 @@ export default function Home() {
 
     console.log("Transaction details:", transaction);
 
-    const txHash = await provider.request({
+    const tx = await provider.request({
       method: "eth_sendTransaction",
       params: [transaction],
     });
     console.log("SIGNED: send0MaticSelf");
-    console.log(`Transaction hash: ${txHash}`);
+    console.log(`Transaction hash: ${tx}`);
   }
 
   async function send001Matic0xf69() {
@@ -116,7 +116,7 @@ export default function Home() {
       value: ethers.utils.hexlify(amountInWei),
     };
 
-    const txHash = await provider.request({
+    const tx = await provider.request({
       method: "eth_sendTransaction",
       params: [transaction],
     });
@@ -124,7 +124,7 @@ export default function Home() {
     message();
 
     console.log("SIGNED: send001Matic0xf69");
-    console.log(`Transaction hash: ${txHash}`);
+    console.log(`Transaction hash: ${tx}`);
   }
 
   const ERC20_ABI = [
@@ -211,7 +211,7 @@ export default function Home() {
     console.log(signatureParameters);
     let fields = signatureParameters.map((param) => param[0]);
     let values = signatureParameters.map((param) => param[1]);
-    return ethers.utils.solidityKeccak256(fields, values);
+    return ethers.utils.hashMessage(fields, values);
   };
 
   async function signTrade() {
