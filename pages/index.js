@@ -71,11 +71,13 @@ export default function Home() {
       console.log("Message received:", message);
     });
 
-    signMessage();
+    if (provider) {
+      signMessage()
+    }
 
   }
 
-  function disconnectWallet() {
+  async function disconnectWallet() {
     console.log("Disconnecting wallet...");
     provider.disconnect();
     setProvider(null);
@@ -335,7 +337,7 @@ export default function Home() {
               isDisabled={!provider}
             >
               Sign Simulated Unlock
-              <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
+              <Tooltip label="Simulate Wallet Unlock. Also gets prompted on connect" aria-label="A tooltip">
                 <InfoIcon color="yellow.500" ml={2} />
               </Tooltip>
             </Button>
