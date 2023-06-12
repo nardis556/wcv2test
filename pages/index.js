@@ -211,7 +211,7 @@ export default function Home() {
     console.log(signatureParameters);
     let fields = signatureParameters.map((param) => param[0]);
     let values = signatureParameters.map((param) => param[1]);
-    return ethers.utils.hashMessage(fields, values);
+    return ethers.utils.solidityKeccak256(fields, values);
   };
 
   async function signTrade() {
@@ -239,6 +239,7 @@ export default function Home() {
     }
 
     const signatureParametersHash = await buildSigHashParams(sigArray);
+    console.log(signatureParametersHash);
     if (!signatureParametersHash) {
       console.error("Failed to build signature parameters hash");
       return;
