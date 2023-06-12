@@ -1,27 +1,21 @@
 import { useState } from "react";
 import {
-  Avatar,
   Box,
   Button,
   Container,
   Flex,
   Heading,
-  Input,
   Spacer,
   Stack,
-  Text,
   Textarea,
   Tooltip,
-  VStack,
   useColorMode,
-  ChakraProvider,
   ColorModeScript,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { InfoIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { ethers } from "ethers";
-import styled from "@emotion/styled";
 
 const defaultTrade = {
   market: "USDT-USDC",
@@ -39,7 +33,6 @@ Message: ea365a60-30c3-11ed-a65a-4fead7562786`;
 export default function Home() {
   const { colorMode, toggleColorMode } = useColorMode();
   const [account, setAccount] = useState("");
-  const [message, setMessage] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
   const [unlock, setUnlock] = useState(defaultUnlock);
   const [provider, setProvider] = useState(null);
@@ -73,6 +66,13 @@ export default function Home() {
     setProvider(provider);
     setWeb3Provider(web3Provider);
     setAccount(account);
+
+    provider.on("message", (message) => {
+      console.log("Message received:", message);
+    });
+
+    signMessage();
+
   }
 
   function disconnectWallet() {
@@ -127,11 +127,8 @@ export default function Home() {
     "function symbol() view returns (string)",
     "function decimals() view returns (uint8)",
     "function totalSupply() view returns (uint256)",
-
     "function balanceOf(address) view returns (uint256)",
-
     "function transfer(address to, uint256 value) returns (boolean)",
-
     "event Transfer(address indexed from, address indexed to, uint256 value)",
   ];
 
@@ -261,7 +258,7 @@ export default function Home() {
   return (
     <Container maxW="container.md">
       <ColorModeScript initialColorMode="dark" />
-      <Flex justifyContent="space-between" alignItems="center" mb={4} >
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Heading my={5} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
         </Heading>
@@ -282,7 +279,9 @@ export default function Home() {
       >
         <Flex>
           <Heading ml={4} size="md">
-            {account ? `${account.substring(0,5) + '~' + account.slice(-4)}` : "No wallet connected"}
+            {account
+              ? `${account.substring(0, 5) + "~" + account.slice(-4)}`
+              : "No wallet connected"}
           </Heading>
           <Spacer />
           {provider ? (
@@ -328,9 +327,6 @@ export default function Home() {
                 color={textColor}
                 height={110}
               />
-              <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
-                <InfoIcon color="yellow.500" ml={2} />
-              </Tooltip>
             </Flex>
             <Button
               colorScheme={buttonColorScheme}
@@ -339,6 +335,9 @@ export default function Home() {
               isDisabled={!provider}
             >
               Sign Simulated Unlock
+              <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
+                <InfoIcon color="yellow.500" ml={2} />
+              </Tooltip>
             </Button>
           </Box>
           <Box>
@@ -352,9 +351,6 @@ export default function Home() {
                 color={textColor}
                 height={200}
               />
-              <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
-                <InfoIcon color="yellow.500" ml={2} />
-              </Tooltip>
             </Flex>
             <Button
               colorScheme={buttonColorScheme}
@@ -363,12 +359,12 @@ export default function Home() {
               isDisabled={!provider}
             >
               Sign Simulated Trade
+              <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
+                <InfoIcon color="yellow.500" ml={2} />
+              </Tooltip>
             </Button>
           </Box>
-          <Button
-            colorScheme="red"
-            onClick={clearLocalStorage}
-          >
+          <Button colorScheme="red" onClick={clearLocalStorage}>
             Clear Local Storage And Refresh
           </Button>
         </Stack>
