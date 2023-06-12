@@ -238,8 +238,9 @@ export default function Home() {
       return;
     }
 
+    console.log(sigArray);
+
     const signatureParametersHash = await buildSigHashParams(sigArray);
-    console.log(`Signature Parameters Hash: ${signatureParametersHash}`);
     if (!signatureParametersHash) {
       console.error("Failed to build signature parameters hash");
       return;
