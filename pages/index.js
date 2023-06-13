@@ -28,7 +28,7 @@ const defaultTrade = {
   wallet: "0xef4d9010289f51be2b49864b5db8a01705e6348b",
 };
 
-const defaultUnlock = `Hello from the IDEX team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
+const defaultUnlock = `Hello from the TEST team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
 
 Message: ea365a60-30c3-11ed-a65a-4fead7562786`;
 
