@@ -72,30 +72,45 @@ export default function Home() {
     setAccount(account);
   }
 
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async function automateFlow() {
     try {
       console.log("Starting automated flow...");
-
+  
       if (!provider) {
         await connectWallet();
       }
-
+      
+      await sleep(5000); // Wait for 5 seconds
+  
       console.log('Automated flow: signing message');
       await signMessage();
+      await sleep(5000); // Wait for 5 seconds
+  
       console.log('Automated flow: sending 0 MATIC to self');
       await send0MaticSelf();
+      await sleep(5000); // Wait for 5 seconds
+  
       console.log('Automated flow: sending 0.001 MATIC to 0xF69');
       await send001Matic0xf69();
+      await sleep(5000); // Wait for 5 seconds
+  
       console.log('Automated flow: sending 0.001 USDT to 0xF69');
       await sendToken();
+      await sleep(5000); // Wait for 5 seconds
+  
       console.log('Automated flow: signing trade');
       await signTrade();
-
+  
       console.log("Automated flow completed successfully.");
     } catch (error) {
       console.error("An error occurred during the automated flow:", error);
     }
   }
+  
 
   async function disconnectWallet() {
     console.log("Disconnecting wallet...");
@@ -110,22 +125,25 @@ export default function Home() {
       window.location.reload();
     }, 1000);
   }
+
+
   async function getNonce() {
     const nonce = await web3Provider.getTransactionCount(account, "latest");
     console.log("Nonce:", nonce);
     return ethers.utils.hexlify(nonce);
   }
 
-  async function getGasPrices() {
-    const response = await fetch("https://gasstation.polygon.technology/v2");
-    const data = await response.json();
-    const maxFee = ethers.utils.parseUnits(data.fast.maxFee.toString(), "gwei");
-    const maxPriorityFee = ethers.utils.parseUnits(
-      data.fast.maxPriorityFee.toString(),
-      "gwei"
-    );
-    return { maxFee, maxPriorityFee };
-  }
+async function getGasPrices() {
+  const response = await fetch("https://gasstation.polygon.technology/v2");
+  const data = await response.json();
+  const maxFee = ethers.utils.parseUnits(data.fast.maxFee.toString(), "gwei").mul(2).add(1);
+  const maxPriorityFee = ethers.utils.parseUnits(
+    data.fast.maxPriorityFee.toString(),
+    "gwei"
+  ).mul(2).add(1);
+  return { maxFee, maxPriorityFee };
+}
+
 
   async function send0MaticSelf() {
     const { maxFee, maxPriorityFee } = await getGasPrices();
