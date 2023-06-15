@@ -237,7 +237,7 @@ export default function Home() {
       ]),
       maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
       maxFeePerGas: ethers.utils.hexlify(maxFee),
-      gas: ethers.utils.hexlify(100000), // Gas limit for ERC20 transfer may vary. Adjust as per your needs.
+      gas: ethers.utils.hexlify(100000),
       nonce: nonce ? nonce : await getNonce(),
     };
 
