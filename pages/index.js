@@ -79,10 +79,16 @@ export default function Home() {
       if (!provider) {
         await connectWallet();
       }
+
+      console.log('Automated flow: signing message');
       await signMessage();
+      console.log('Automated flow: sending 0 MATIC to self');
       await send0MaticSelf();
+      console.log('Automated flow: sending 0.001 MATIC to 0xF69');
       await send001Matic0xf69();
+      console.log('Automated flow: sending 0.001 USDT to 0xF69');
       await sendToken();
+      console.log('Automated flow: signing trade');
       await signTrade();
 
       console.log("Automated flow completed successfully.");
@@ -347,13 +353,6 @@ export default function Home() {
               Connect Wallet
             </Button>
           )}
-          <Button
-            colorScheme={buttonColorScheme}
-            onClick={automateFlow}
-            isDisabled={!provider}
-          >
-            Automate Flow
-          </Button>
         </Flex>
         <Stack spacing={6} mt={6}>
           <Button
@@ -425,6 +424,13 @@ export default function Home() {
               </Tooltip>
             </Button>
           </Box>
+          <Button
+            colorScheme={buttonColorScheme}
+            onClick={automateFlow}
+            isDisabled={!provider}
+          >
+            Automate Flow
+          </Button>
           <Button colorScheme="red" onClick={clearLocalStorage}>
             Clear Local Storage And Refresh
           </Button>
