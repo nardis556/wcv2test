@@ -121,7 +121,10 @@ export default function Home() {
 
     console.log("Transaction details:", transaction);
 
-    const tx = await provider.sendTransaction(transaction);
+    const tx = await provider.request({
+      method: "eth_sendTransaction",
+      params: [transaction],
+    });
     console.log("SIGNED: send0MaticSelf");
     console.log(`Transaction hash: ${tx.hash}`);
   }
@@ -143,7 +146,10 @@ export default function Home() {
 
     console.log("Transaction details:", transaction);
 
-    const tx = await provider.sendTransaction(transaction);
+    const tx = await provider.request({
+      method: "eth_sendTransaction",
+      params: [transaction],
+    });
 
     message();
 
