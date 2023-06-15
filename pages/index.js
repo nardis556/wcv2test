@@ -72,13 +72,7 @@ export default function Home() {
     setAccount(account);
   }
 
-  function message() {
-    provider.on("message", (message) => {
-      console.log("MESSAGE:", message);
-    });
-  }
-
-  function disconnectWallet() {
+  async function disconnectWallet() {
     console.log("Disconnecting wallet...");
     provider.disconnect();
     setProvider(null);
@@ -87,6 +81,9 @@ export default function Home() {
     console.log("Wallet disconnected");
     clearLocalStorage();
     console.log("Local storage cleared");
+    setTimeout(() => {
+      window.location.reload();
+    } , 1000);
   }
   async function getNonce() {
     const nonce = await web3Provider.getTransactionCount(account, "latest");
@@ -125,8 +122,6 @@ export default function Home() {
       method: "eth_sendTransaction",
       params: [transaction],
     });
-    
-    await tx.wait()
 
     console.log("SIGNED: send0MaticSelf");
     console.log(`Transaction details: ${tx}`);
@@ -153,8 +148,6 @@ export default function Home() {
       method: "eth_sendTransaction",
       params: [transaction],
     });
-
-    await tx.wait()
 
     console.log("SIGNED: send001Matic0xf69");
     console.log(`Transaction details: ${tx}`);
