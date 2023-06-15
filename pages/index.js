@@ -89,7 +89,7 @@ export default function Home() {
     console.log("Local storage cleared");
   }
   async function getNonce() {
-    const nonce = await provider.getTransactionCount(account, "latest");
+    const nonce = await web3Provider.getTransactionCount(account, "latest");
     console.log("Nonce:", nonce);
     return ethers.utils.hexlify(nonce);
   }
