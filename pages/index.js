@@ -94,19 +94,26 @@ export default function Home() {
     return ethers.utils.hexlify(nonce);
   }
 
-  async function getGasPrice() {
-    const gasPrice = await provider.getGasPrice();
-    console.log("Gas price:", gasPrice.toString());
-    return ethers.utils.hexlify(gasPrice);
+  async function getGasPrices() {
+    const response = await fetch("https://gasstation.polygon.technology/v2");
+    const data = await response.json();
+    const maxFee = ethers.utils.parseUnits(data.fast.maxFee.toString(), "gwei");
+    const maxPriorityFee = ethers.utils.parseUnits(
+      data.fast.maxPriorityFee.toString(),
+      "gwei"
+    );
+    return { maxFee, maxPriorityFee };
   }
 
   async function send0MaticSelf() {
+    const { maxFee, maxPriorityFee } = await getGasPrices();
     console.log("Sending transaction...");
     const transaction = {
       from: account,
       to: account,
       value: ethers.utils.hexlify(0),
-      gasPrice: await getGasPrice(),
+      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+      maxFeePerGas: ethers.utils.hexlify(maxFee),
       gas: ethers.utils.hexlify(21000),
       nonce: await getNonce(),
       data: "0x",
@@ -120,13 +127,15 @@ export default function Home() {
   }
 
   async function send001Matic0xf69() {
+    const { maxFee, maxPriorityFee } = await getGasPrices();
     console.log("Sending transaction...");
     const amountInWei = ethers.utils.parseUnits("0.001", "ether");
     const transaction = {
       from: account,
       to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
       value: ethers.utils.hexlify(amountInWei),
-      gasPrice: await getGasPrice(),
+      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+      maxFeePerGas: ethers.utils.hexlify(maxFee),
       gas: ethers.utils.hexlify(21000),
       nonce: await getNonce(),
       data: "0x",
