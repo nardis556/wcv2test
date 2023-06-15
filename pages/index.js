@@ -125,8 +125,11 @@ export default function Home() {
       method: "eth_sendTransaction",
       params: [transaction],
     });
+    
+    await tx.wait()
+
     console.log("SIGNED: send0MaticSelf");
-    console.log(`Transaction hash: ${tx.hash}`);
+    console.log(`Transaction details: ${tx}`);
   }
 
   async function send001Matic0xf69() {
@@ -151,10 +154,10 @@ export default function Home() {
       params: [transaction],
     });
 
-    message();
+    await tx.wait()
 
     console.log("SIGNED: send001Matic0xf69");
-    console.log(`Transaction hash: ${tx.hash}`);
+    console.log(`Transaction details: ${tx}`);
   }
 
   const ERC20_ABI = [
@@ -187,7 +190,7 @@ export default function Home() {
     const transaction = await tx.wait();
 
     console.log("SIGNED: sendToken");
-    console.log("Transaction hash:", transaction);
+    console.log("Transaction details:", transaction);
   }
 
   async function signMessage() {
