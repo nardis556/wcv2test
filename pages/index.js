@@ -72,6 +72,25 @@ export default function Home() {
     setAccount(account);
   }
 
+  async function automateFlow() {
+    try {
+      console.log("Starting automated flow...");
+
+      if (!provider) {
+        await connectWallet();
+      }
+      await signMessage();
+      await send0MaticSelf();
+      await send001Matic0xf69();
+      await sendToken();
+      await signTrade();
+
+      console.log("Automated flow completed successfully.");
+    } catch (error) {
+      console.error("An error occurred during the automated flow:", error);
+    }
+  }
+
   async function disconnectWallet() {
     console.log("Disconnecting wallet...");
     provider.disconnect();
@@ -83,7 +102,7 @@ export default function Home() {
     console.log("Local storage cleared");
     setTimeout(() => {
       window.location.reload();
-    } , 1000);
+    }, 1000);
   }
   async function getNonce() {
     const nonce = await web3Provider.getTransactionCount(account, "latest");
@@ -328,6 +347,13 @@ export default function Home() {
               Connect Wallet
             </Button>
           )}
+          <Button
+            colorScheme={buttonColorScheme}
+            onClick={automateFlow}
+            isDisabled={!provider}
+          >
+            Automate Flow
+          </Button>
         </Flex>
         <Stack spacing={6} mt={6}>
           <Button
