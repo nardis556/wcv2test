@@ -89,12 +89,24 @@ export default function Home() {
     console.log("Local storage cleared");
   }
 
+  async function getNonce() {
+    const nonce = await provider.request({
+      method: "eth_getTransactionCount",
+      params: [account, "latest"],
+    });
+    console.log("Nonce:", nonce);
+    return nonce;
+  }
+
   async function send0MaticSelf() {
     console.log("Sending transaction...");
     const transaction = {
       from: account,
       to: account,
       value: 0,
+      gasPrice: ethers.utils.parseUnits("500", "gwei"),
+      gas: 100000,
+      nonce: await getNonce(),
     };
 
     console.log("Transaction details:", transaction);
@@ -114,6 +126,9 @@ export default function Home() {
       from: account,
       to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
       value: ethers.utils.hexlify(amountInWei),
+      gasPrice: ethers.utils.parseUnits("500", "gwei"),
+      gas: 100000,
+      nonce: await getNonce(),
     };
 
     const tx = await provider.request({
