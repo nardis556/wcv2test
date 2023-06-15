@@ -73,44 +73,49 @@ export default function Home() {
   }
 
   function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async function automateFlow() {
+    const sleepIncrement = 8000;
+
     try {
       console.log("Starting automated flow...");
-  
+
       if (!provider) {
         await connectWallet();
       }
-      
-      await sleep(5000); // Wait for 5 seconds
-  
-      console.log('Automated flow: signing message');
+
+      await sleep(sleepIncrement); // Wait for 5 seconds
+
+      console.log("Automated flow: signing message");
       await signMessage();
-      await sleep(5000); // Wait for 5 seconds
-  
-      console.log('Automated flow: sending 0 MATIC to self');
-      await send0MaticSelf();
-      await sleep(5000); // Wait for 5 seconds
-  
-      console.log('Automated flow: sending 0.001 MATIC to 0xF69');
-      await send001Matic0xf69();
-      await sleep(5000); // Wait for 5 seconds
-  
-      console.log('Automated flow: sending 0.001 USDT to 0xF69');
-      await sendToken();
-      await sleep(5000); // Wait for 5 seconds
-  
-      console.log('Automated flow: signing trade');
+      await sleep(sleepIncrement); // Wait for 5 seconds
+
+      console.log("Automated flow: sending 0 MATIC to self");
+      let nonce = await getNonce();
+      await send0MaticSelf(nonce);
+      await sleep(sleepIncrement); // Wait for 5 seconds
+
+      console.log("Automated flow: sending 0.001 MATIC to 0xF69");
+      nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
+      await send001Matic0xf69(nonce);
+      await sleep(sleepIncrement); // Wait for 5 seconds
+
+      console.log("Automated flow: sending 0.001 USDT to 0xF69");
+      nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
+      await sendToken(nonce);
+      await sleep(sleepIncrement); // Wait for 5 seconds
+
+      console.log("Automated flow: signing trade");
       await signTrade();
-  
-      console.log("Automated flow completed successfully.");
+
+      alert("Automated flow completed successfully.");
     } catch (error) {
       console.error("An error occurred during the automated flow:", error);
+      alert(`An error occurred during the automated flow\n\n${error}`);
     }
   }
-  
 
   async function disconnectWallet() {
     console.log("Disconnecting wallet...");
@@ -126,26 +131,28 @@ export default function Home() {
     }, 1000);
   }
 
-
   async function getNonce() {
     const nonce = await web3Provider.getTransactionCount(account, "latest");
     console.log("Nonce:", nonce);
     return ethers.utils.hexlify(nonce);
   }
 
-async function getGasPrices() {
-  const response = await fetch("https://gasstation.polygon.technology/v2");
-  const data = await response.json();
-  const maxFee = ethers.utils.parseUnits(data.fast.maxFee.toString(), "gwei").mul(2).add(1);
-  const maxPriorityFee = ethers.utils.parseUnits(
-    data.fast.maxPriorityFee.toString(),
-    "gwei"
-  ).mul(2).add(1);
-  return { maxFee, maxPriorityFee };
-}
+  async function getGasPrices() {
+    const response = await fetch("https://gasstation.polygon.technology/v2");
+    const data = await response.json();
+    const maxFee = ethers.utils
+      .parseUnits(data.fast.maxFee.toString(), "gwei")
+      .mul(2)
+      .add(1);
 
+    const maxPriorityFee = ethers.utils
+      .parseUnits(data.fast.maxPriorityFee.toString(), "gwei")
+      .mul(2)
+      .add(1);
+    return { maxFee, maxPriorityFee };
+  }
 
-  async function send0MaticSelf() {
+  async function send0MaticSelf(nonce) {
     const { maxFee, maxPriorityFee } = await getGasPrices();
     console.log("Sending transaction...");
     const transaction = {
@@ -155,7 +162,7 @@ async function getGasPrices() {
       maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
       maxFeePerGas: ethers.utils.hexlify(maxFee),
       gas: ethers.utils.hexlify(21000),
-      nonce: await getNonce(),
+      nonce: nonce ? nonce : await getNonce(),
       data: "0x",
     };
 
@@ -170,7 +177,7 @@ async function getGasPrices() {
     console.log(`Transaction details: ${tx}`);
   }
 
-  async function send001Matic0xf69() {
+  async function send001Matic0xf69(nonce) {
     const { maxFee, maxPriorityFee } = await getGasPrices();
     console.log("Sending transaction...");
     const amountInWei = ethers.utils.parseUnits("0.001", "ether");
@@ -181,7 +188,7 @@ async function getGasPrices() {
       maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
       maxFeePerGas: ethers.utils.hexlify(maxFee),
       gas: ethers.utils.hexlify(21000),
-      nonce: await getNonce(),
+      nonce: nonce ? nonce : await getNonce(),
       data: "0x",
     };
 
@@ -206,7 +213,7 @@ async function getGasPrices() {
     "event Transfer(address indexed from, address indexed to, uint256 value)",
   ];
 
-  async function sendToken() {
+  async function sendToken(nonce) {
     console.log("Sending tokens...");
 
     const tokenContractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
@@ -219,14 +226,30 @@ async function getGasPrices() {
     const decimals = await tokenContract.decimals();
     const amountInTokenUnits = ethers.utils.parseUnits("0.001", decimals);
 
-    const tx = await tokenContract.transfer(
-      "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
-      amountInTokenUnits
-    );
-    const transaction = await tx.wait();
+    const { maxFee, maxPriorityFee } = await getGasPrices();
+
+    const transactionParams = {
+      from: account,
+      to: tokenContractAddress,
+      data: tokenContract.interface.encodeFunctionData("transfer", [
+        "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
+        amountInTokenUnits,
+      ]),
+      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+      maxFeePerGas: ethers.utils.hexlify(maxFee),
+      gas: ethers.utils.hexlify(100000), // Gas limit for ERC20 transfer may vary. Adjust as per your needs.
+      nonce: nonce ? nonce : await getNonce(),
+    };
+
+    console.log("Transaction details:", transactionParams);
+
+    const tx = await provider.request({
+      method: "eth_sendTransaction",
+      params: [transactionParams],
+    });
 
     console.log("SIGNED: sendToken");
-    console.log("Transaction details:", transaction);
+    console.log(`Transaction details: ${tx}`);
   }
 
   async function signMessage() {
