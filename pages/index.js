@@ -98,14 +98,23 @@ export default function Home() {
     return nonce;
   }
 
+  async function getGasPrice() {
+    const gasPrice = await provider.request({
+      method: "eth_gasPrice",
+      params: [],
+    });
+    console.log("Gas price:", gasPrice);
+    return gasPrice;
+  }
+
   async function send0MaticSelf() {
     console.log("Sending transaction...");
     const transaction = {
       from: account,
       to: account,
       value: 0,
-      gasPrice: ethers.utils.parseUnits("500", "gwei"),
-      gas: 100000,
+      gasPrice: await getGasPrice(),
+      gas: 21000,
       nonce: await getNonce(),
       data: "0x",
     };
@@ -127,8 +136,8 @@ export default function Home() {
       from: account,
       to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
       value: ethers.utils.hexlify(amountInWei),
-      gasPrice: ethers.utils.parseUnits("500", "gwei"),
-      gas: 100000,
+      gasPrice: await getGasPrice(),
+      gas: 21000,
       nonce: await getNonce(),
       data: "0x",
     };
