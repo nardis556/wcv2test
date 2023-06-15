@@ -107,6 +107,7 @@ export default function Home() {
       gasPrice: ethers.utils.parseUnits("500", "gwei"),
       gas: 100000,
       nonce: await getNonce(),
+      data: "0x",
     };
 
     console.log("Transaction details:", transaction);
@@ -129,6 +130,7 @@ export default function Home() {
       gasPrice: ethers.utils.parseUnits("500", "gwei"),
       gas: 100000,
       nonce: await getNonce(),
+      data: "0x",
     };
 
     const tx = await provider.request({
