@@ -88,23 +88,16 @@ export default function Home() {
     clearLocalStorage();
     console.log("Local storage cleared");
   }
-
   async function getNonce() {
-    const nonce = await provider.request({
-      method: "eth_getTransactionCount",
-      params: [account, "latest"],
-    });
+    const nonce = await provider.getTransactionCount(account, "latest");
     console.log("Nonce:", nonce);
-    return nonce;
+    return ethers.utils.hexlify(nonce);
   }
 
   async function getGasPrice() {
-    const gasPrice = await provider.request({
-      method: "eth_gasPrice",
-      params: [],
-    });
-    console.log("Gas price:", gasPrice);
-    return gasPrice;
+    const gasPrice = await provider.getGasPrice();
+    console.log("Gas price:", gasPrice.toString());
+    return ethers.utils.hexlify(gasPrice);
   }
 
   async function send0MaticSelf() {
@@ -112,21 +105,18 @@ export default function Home() {
     const transaction = {
       from: account,
       to: account,
-      value: 0,
+      value: ethers.utils.hexlify(0),
       gasPrice: await getGasPrice(),
-      gas: 21000,
+      gas: ethers.utils.hexlify(21000),
       nonce: await getNonce(),
       data: "0x",
     };
 
     console.log("Transaction details:", transaction);
 
-    const tx = await provider.request({
-      method: "eth_sendTransaction",
-      params: [transaction],
-    });
+    const tx = await provider.sendTransaction(transaction);
     console.log("SIGNED: send0MaticSelf");
-    console.log(`Transaction hash: ${tx}`);
+    console.log(`Transaction hash: ${tx.hash}`);
   }
 
   async function send001Matic0xf69() {
@@ -137,22 +127,19 @@ export default function Home() {
       to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
       value: ethers.utils.hexlify(amountInWei),
       gasPrice: await getGasPrice(),
-      gas: 21000,
+      gas: ethers.utils.hexlify(21000),
       nonce: await getNonce(),
       data: "0x",
     };
 
     console.log("Transaction details:", transaction);
 
-    const tx = await provider.request({
-      method: "eth_sendTransaction",
-      params: [transaction],
-    });
+    const tx = await provider.sendTransaction(transaction);
 
     message();
 
     console.log("SIGNED: send001Matic0xf69");
-    console.log(`Transaction hash: ${tx}`);
+    console.log(`Transaction hash: ${tx.hash}`);
   }
 
   const ERC20_ABI = [
