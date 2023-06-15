@@ -133,6 +133,8 @@ export default function Home() {
       data: "0x",
     };
 
+    console.log("Transaction details:", transaction);
+
     const tx = await provider.request({
       method: "eth_sendTransaction",
       params: [transaction],
