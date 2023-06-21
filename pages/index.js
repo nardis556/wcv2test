@@ -17,7 +17,6 @@ import {
 import { InfoIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { ethers } from "ethers";
-import { setTimeout } from "timers";
 
 const defaultTrade = {
   market: "USDT-USDC",
