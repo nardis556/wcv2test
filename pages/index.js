@@ -116,6 +116,22 @@ export default function Home() {
     }
   }
 
+  function safeStringify(obj, indent = 2) {
+    let cache = [];
+    const retVal = JSON.stringify(
+      obj,
+      (key, value) =>
+        typeof value === "object" && value !== null
+          ? cache.includes(value)
+            ? undefined // Duplicate reference found, discard key
+            : cache.push(value) && value // Store value in our collection
+          : value,
+      indent
+    );
+    cache = null;
+    return retVal;
+  }
+
   async function disconnectWallet() {
     console.log("Disconnecting wallet...");
     provider.disconnect();
@@ -131,10 +147,11 @@ export default function Home() {
   }
 
   async function getNonce() {
-    const nonce = await web3Provider.getTransactionCount(account, "latest");
-    console.log("Nonce:", nonce);
-    return ethers.utils.hexlify(nonce);
+    return await web3Provider.getTransactionCount(account, 'pending').then((nonce) => {
+      return ethers.utils.hexlify(nonce);
+    });
   }
+  
 
   async function getGasPrices() {
     const response = await fetch("https://gasstation.polygon.technology/v2");
@@ -165,7 +182,7 @@ export default function Home() {
       data: "0x",
     };
 
-    console.log("Transaction details:", transaction);
+    console.log(transaction)
 
     const tx = await provider.request({
       method: "eth_sendTransaction",
@@ -397,21 +414,21 @@ export default function Home() {
         <Stack spacing={6} mt={6}>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={send0MaticSelf}
+            onClick={() => send0MaticSelf()}
             isDisabled={!provider}
           >
             Send 0 MATIC Self Transaction
           </Button>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={send001Matic0xf69}
+            onClick={() => send001Matic0xf69()}
             isDisabled={!provider}
           >
             Send 0.001 MATIC to 0xF69
           </Button>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={sendToken}
+            onClick={() => sendToken()}
             isDisabled={!provider}
           >
             Send 0.001 USDT to 0xF69
