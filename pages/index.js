@@ -98,7 +98,7 @@ export default function Home() {
 
       console.log("Automated flow: sending 0.001 MATIC to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
-      await send0001Matic0xf69(nonce);
+      await send000001Matic0xf69(nonce);
       await sleep(sleepIncrement)
 
       console.log("Automated flow: sending 0.001 USDT to 0xF69");
