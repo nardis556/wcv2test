@@ -18,7 +18,7 @@ import {
   Spinner,
   Center,
 } from "@chakra-ui/react";
-import { InfoIcon } from "@chakra-ui/icons";
+import { InfoIcon, CheckIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { ethers } from "ethers";
 
@@ -37,12 +37,20 @@ Message: ea365a60-30c3-11ed-a65a-4fead7562786`;
 
 const walletconnectEthereumProviderVersion =
   packageJson.dependencies["@walletconnect/ethereum-provider"];
-const walletconnectModalVersion = packageJson.dependencies["@walletconnect/modal"];
+const walletconnectModalVersion =
+  packageJson.dependencies["@walletconnect/modal"];
 const ethersVersion = packageJson.dependencies["ethers"];
-
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
+
+  const [isSelfMaticSent, setIsSelfMaticSent] = useState(false);
+  const [isMaticTo0xf69Sent, setIsMaticTo0xf69Sent] = useState(false);
+  const [isUsdtTo0xf69Sent, setIsUsdtTo0xf69Sent] = useState(false);
+  const [isTradeSigned, setIsTradeSigned] = useState(false);
+  const [isMessageSigned, setIsMessageSigned] = useState(false);
+  const [isAutomatedFlowStarted, setIsAutomatedFlowStarted] = useState(false);
+  
   const { colorMode, toggleColorMode } = useColorMode();
   const [account, setAccount] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
@@ -91,6 +99,7 @@ export default function Home() {
   }
 
   async function automateFlow() {
+    setIsAutomatedFlowStarted(true);
     const sleepIncrement = 2000;
 
     try {
@@ -125,6 +134,7 @@ export default function Home() {
       await signTrade();
 
       alert("Automated flow completed successfully.");
+      setIsAutomatedFlowStarted(false);
     } catch (error) {
       console.error(
         "An error occurred during the automated flow:",
@@ -160,6 +170,7 @@ export default function Home() {
       nonce = await web3Provider.getTransactionCount(account, "pending");
     } catch (e) {
       console.error(e);
+      return e;
     }
     return ethers.utils.hexlify(nonce);
   }
@@ -180,10 +191,12 @@ export default function Home() {
       return { maxFee, maxPriorityFee };
     } catch (e) {
       console.error(e);
+      return e;
     }
   }
 
   async function send0MaticSelf(nonce) {
+    setIsSelfMaticSent(true);
     try {
       const { maxFee, maxPriorityFee } = await getGasPrices();
       console.log("Sending transaction...");
@@ -209,10 +222,13 @@ export default function Home() {
       console.log(`Transaction details: ${tx}`);
     } catch (e) {
       console.error(e);
+      return e;
     }
+    setIsSelfMaticSent(false);
   }
 
   async function send000001Matic0xf69(nonce) {
+    setIsMaticTo0xf69Sent(true);
     try {
       const { maxFee, maxPriorityFee } = await getGasPrices();
       console.log("Sending transaction...");
@@ -237,9 +253,11 @@ export default function Home() {
 
       console.log("SIGNED: send000001Matic0xf69");
       console.log(`Transaction details: ${tx}`);
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error(e);
+      return e;
     }
+    setIsMaticTo0xf69Sent(false);
   }
 
   const ERC20_ABI = [
@@ -253,6 +271,7 @@ export default function Home() {
   ];
 
   async function sendToken(nonce) {
+    setIsUsdtTo0xf69Sent(true);
     try {
       console.log("Sending tokens...");
 
@@ -291,11 +310,13 @@ export default function Home() {
       console.log("SIGNED: sendToken");
       console.log(`Transaction details: ${tx}`);
     } catch (e) {
-      console.error(error);
+      console.error(e);
     }
+    setIsUsdtTo0xf69Sent(false);
   }
 
   async function signMessage() {
+    setIsMessageSigned(true);
     try {
       console.log("Signing message...");
       const params = [
@@ -314,7 +335,9 @@ export default function Home() {
       console.log(`Signature: ${signature}`);
     } catch (e) {
       console.error(e);
+      return e;
     }
+    setIsMessageSigned(false);
   }
 
   async function createSigArray(orderParams) {
@@ -346,6 +369,7 @@ export default function Home() {
       ];
     } catch (e) {
       console.error(e);
+      return e;
     }
   }
 
@@ -356,10 +380,12 @@ export default function Home() {
       return ethers.utils.solidityKeccak256(fields, values);
     } catch (e) {
       console.error(e);
+      return e;
     }
   };
 
   async function signTrade() {
+    setIsTradeSigned(true);
     try {
       if (!provider) {
         console.error("Provider is not connected");
@@ -402,7 +428,9 @@ export default function Home() {
       console.log(`Signature: ${signature}`);
     } catch (e) {
       console.error(e);
+      return e;
     }
+    setIsTradeSigned(false);
   }
 
   function clearLocalStorage() {
@@ -467,6 +495,7 @@ export default function Home() {
             colorScheme={buttonColorScheme}
             onClick={() => send0MaticSelf()}
             isDisabled={!provider}
+            isLoading={isSelfMaticSent}
           >
             Send 0 MATIC Self Transaction
           </Button>
@@ -474,6 +503,7 @@ export default function Home() {
             colorScheme={buttonColorScheme}
             onClick={() => send000001Matic0xf69()}
             isDisabled={!provider}
+            isLoading={isMaticTo0xf69Sent}
           >
             Send 0.000001 MATIC to 0xF69
           </Button>
@@ -481,6 +511,7 @@ export default function Home() {
             colorScheme={buttonColorScheme}
             onClick={() => sendToken()}
             isDisabled={!provider}
+            isLoading={isUsdtTo0xf69Sent}
           >
             Send 0.000001 USDT to 0xF69
           </Button>
@@ -502,6 +533,7 @@ export default function Home() {
               onClick={signMessage}
               mt={2}
               isDisabled={!provider}
+              isLoading={isMessageSigned}
             >
               Sign Simulated Unlock
               <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
@@ -527,6 +559,7 @@ export default function Home() {
               onClick={signTrade}
               mt={2}
               isDisabled={!provider}
+              isLoading={isTradeSigned}
             >
               Sign Simulated Trade
               <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
@@ -538,6 +571,7 @@ export default function Home() {
             colorScheme={buttonColorScheme}
             onClick={automateFlow}
             isDisabled={!provider}
+            isLoading={isAutomatedFlowStarted}
           >
             Automate Flow
           </Button>
@@ -546,10 +580,12 @@ export default function Home() {
           </Button>
         </Stack>
       </Box>
-     <Container maxW="container.md" fontSize={11} alignContent={"left"}>
-     <p>@walletconnect/ethereum-provider{walletconnectEthereumProviderVersion}</p>
-      <p>@walletconnect/modal{walletconnectModalVersion}</p>
-      <p>@ethers{ethersVersion}</p>
+      <Container maxW="container.md" fontSize={11} alignContent={"left"}>
+        <p>
+          @walletconnect/ethereum-provider{walletconnectEthereumProviderVersion}
+        </p>
+        <p>@walletconnect/modal{walletconnectModalVersion}</p>
+        <p>@ethers{ethersVersion}</p>
       </Container>
     </Container>
   );
