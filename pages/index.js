@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa";
+import packageJson from "../package.json";
 import {
   Box,
   Button,
@@ -15,6 +16,7 @@ import {
   useColorModeValue,
   IconButton,
   Spinner,
+  Center,
 } from "@chakra-ui/react";
 import { InfoIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
@@ -32,6 +34,12 @@ const defaultTrade = {
 const defaultUnlock = `Hello from the TEST team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
 
 Message: ea365a60-30c3-11ed-a65a-4fead7562786`;
+
+const walletconnectEthereumProviderVersion =
+  packageJson.dependencies["@walletconnect/ethereum-provider"];
+const walletconnectModalVersion = packageJson.dependencies["@walletconnect/modal"];
+const ethersVersion = packageJson.dependencies["ethers"];
+
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -60,21 +68,21 @@ export default function Home() {
           137: "https://polygon-rpc.com",
         },
       });
-  
+
       await provider.enable();
-  
+
       const web3Provider = new ethers.providers.Web3Provider(provider);
       const signer = web3Provider.getSigner();
       const account = await signer.getAddress();
-  
+
       console.log("Wallet connected:", account);
-  
+
       setProvider(provider);
       setWeb3Provider(web3Provider);
       setAccount(account);
     } catch (e) {
-      console.log(e)
-      clearLocalStorage()
+      console.log(e);
+      clearLocalStorage();
     }
   }
 
@@ -118,8 +126,17 @@ export default function Home() {
 
       alert("Automated flow completed successfully.");
     } catch (error) {
-      console.error("An error occurred during the automated flow:", JSON.stringify(error, null, 2));
-      alert(`An error occurred during the automated flow. See console for more info${JSON.stringify(error, null, 2)}`);
+      console.error(
+        "An error occurred during the automated flow:",
+        JSON.stringify(error, null, 2)
+      );
+      alert(
+        `An error occurred during the automated flow. See console for more info${JSON.stringify(
+          error,
+          null,
+          2
+        )}`
+      );
     }
   }
 
@@ -529,6 +546,11 @@ export default function Home() {
           </Button>
         </Stack>
       </Box>
+     <Container maxW="container.md" fontSize={11} alignContent={"left"}>
+     <p>@walletconnect/ethereum-provider{walletconnectEthereumProviderVersion}</p>
+      <p>@walletconnect/modal{walletconnectModalVersion}</p>
+      <p>@ethers{ethersVersion}</p>
+      </Container>
     </Container>
   );
 }
