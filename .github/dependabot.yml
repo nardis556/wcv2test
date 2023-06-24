@@ -1,0 +1,30 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/" 
+    schedule:
+      interval: "daily"
+    ignore:
+      - dependency-name: "@chakra-ui/color-mode"
+      - dependency-name: "@chakra-ui/icons"
+      - dependency-name: "@chakra-ui/react"
+      - dependency-name: "@emotion/react"
+      - dependency-name: "@emotion/styled"
+      - dependency-name: "@react-native-async-storage/async-storage"
+      - dependency-name: "eslint"
+      - dependency-name: "eslint-config-next"
+      - dependency-name: "ethers"
+      - dependency-name: "framer-motion"
+      - dependency-name: "next"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-icons"
+      - dependency-name: "react-native-get-random-values"
+      - dependency-name: "react-native-modal"
+      - dependency-name: "react-native-svg"
+      - dependency-name: "uuid"
