@@ -76,7 +76,7 @@ export default function Home() {
   }
 
   async function automateFlow() {
-    const sleepIncrement = 8000;
+    const sleepIncrement = 2000;
 
     try {
       console.log("Starting automated flow...");
