@@ -85,26 +85,26 @@ export default function Home() {
         await connectWallet();
       }
 
-      await sleep(sleepIncrement); // Wait for 5 seconds
+      await sleep(sleepIncrement);
 
       console.log("Automated flow: signing message");
       await signMessage();
-      await sleep(sleepIncrement); // Wait for 5 seconds
+      await sleep(sleepIncrement);
 
       console.log("Automated flow: sending 0 MATIC to self");
       let nonce = await getNonce();
       await send0MaticSelf(nonce);
-      await sleep(sleepIncrement); // Wait for 5 seconds
+      await sleep(sleepIncrement);
 
       console.log("Automated flow: sending 0.001 MATIC to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
-      await send001Matic0xf69(nonce);
-      await sleep(sleepIncrement); // Wait for 5 seconds
+      await send0001Matic0xf69(nonce);
+      await sleep(sleepIncrement)
 
       console.log("Automated flow: sending 0.001 USDT to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
       await sendToken(nonce);
-      await sleep(sleepIncrement); // Wait for 5 seconds
+      await sleep(sleepIncrement);
 
       console.log("Automated flow: signing trade");
       await signTrade();
@@ -114,22 +114,6 @@ export default function Home() {
       console.error("An error occurred during the automated flow:", error);
       alert(`An error occurred during the automated flow\n\n${error}`);
     }
-  }
-
-  function safeStringify(obj, indent = 2) {
-    let cache = [];
-    const retVal = JSON.stringify(
-      obj,
-      (key, value) =>
-        typeof value === "object" && value !== null
-          ? cache.includes(value)
-            ? undefined // Duplicate reference found, discard key
-            : cache.push(value) && value // Store value in our collection
-          : value,
-      indent
-    );
-    cache = null;
-    return retVal;
   }
 
   async function disconnectWallet() {
@@ -147,12 +131,11 @@ export default function Home() {
   }
 
   async function getNonce() {
-    return await web3Provider.getTransactionCount(account, 'pending').then((nonce) => {
-      return ethers.utils.hexlify(nonce);
-    });
+    const nonce = await web3Provider.getTransactionCount(account, 'pending');
+    return ethers.utils.hexlify(nonce);
   }
   
-
+  
   async function getGasPrices() {
     const response = await fetch("https://gasstation.polygon.technology/v2");
     const data = await response.json();
@@ -193,10 +176,10 @@ export default function Home() {
     console.log(`Transaction details: ${tx}`);
   }
 
-  async function send001Matic0xf69(nonce) {
+  async function send000001Matic0xf69(nonce) {
     const { maxFee, maxPriorityFee } = await getGasPrices();
     console.log("Sending transaction...");
-    const amountInWei = ethers.utils.parseUnits("0.001", "ether");
+    const amountInWei = ethers.utils.parseUnits("0.000001", "ether");
     const transaction = {
       from: account,
       to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
@@ -215,7 +198,7 @@ export default function Home() {
       params: [transaction],
     });
 
-    console.log("SIGNED: send001Matic0xf69");
+    console.log("SIGNED: send000001Matic0xf69");
     console.log(`Transaction details: ${tx}`);
   }
 
@@ -240,7 +223,7 @@ export default function Home() {
     );
 
     const decimals = await tokenContract.decimals();
-    const amountInTokenUnits = ethers.utils.parseUnits("0.001", decimals);
+    const amountInTokenUnits = ethers.utils.parseUnits("0.000001", decimals);
 
     const { maxFee, maxPriorityFee } = await getGasPrices();
 
@@ -421,17 +404,17 @@ export default function Home() {
           </Button>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={() => send001Matic0xf69()}
+            onClick={() => send0001Matic0xf69()}
             isDisabled={!provider}
           >
-            Send 0.001 MATIC to 0xF69
+            Send 0.000001 MATIC to 0xF69
           </Button>
           <Button
             colorScheme={buttonColorScheme}
             onClick={() => sendToken()}
             isDisabled={!provider}
           >
-            Send 0.001 USDT to 0xF69
+            Send 0.000001 USDT to 0xF69
           </Button>
           <Box>
             <Flex alignItems="center">
