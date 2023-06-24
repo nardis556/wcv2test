@@ -26,7 +26,7 @@ const defaultTrade = {
   quantity: "33.06375000",
   side: "buy",
   type: "market",
-  wallet: "0xef4d9010289f51be2b49864b5db8a01705e6348b",
+  wallet: "0x0000000000000000000000000000000000000000",
 };
 
 const defaultUnlock = `Hello from the TEST team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
@@ -396,13 +396,13 @@ export default function Home() {
         <Heading my={5} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
           <Tooltip label="View Source">
-          <IconButton
-            as="a"
-            href="https://github.com/nardis556/wcv2test"
-            aria-label="GitHub"
-            icon={<FaGithub />}
-          />
-        </Tooltip>
+            <IconButton
+              as="a"
+              href="https://github.com/nardis556/wcv2test"
+              aria-label="GitHub"
+              icon={<FaGithub />}
+            />
+          </Tooltip>
         </Heading>
         <Button onClick={toggleColorMode} width={100}>
           {colorMode === "light" ? "Dark" : "Light"}
@@ -450,7 +450,7 @@ export default function Home() {
           </Button>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={() => send0001Matic0xf69()}
+            onClick={() => send000001Matic0xf69()}
             isDisabled={!provider}
           >
             Send 0.000001 MATIC to 0xF69
