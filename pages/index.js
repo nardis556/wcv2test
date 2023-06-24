@@ -393,7 +393,9 @@ export default function Home() {
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Heading my={5} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
-          <Tooltip href="https://github.com/nardis556/wcv2test" label="GitHub" Tooltip/>
+          <Tooltip href="https://github.com/nardis556/wcv2test" aria-label="GitHub">
+            <InfoIcon color="green.500" ml={2} />
+          </Tooltip>
         </Heading>
         <Button onClick={toggleColorMode}>
           {colorMode === "light" ? "Dark" : "Light"}
