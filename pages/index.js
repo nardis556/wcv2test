@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaGithub } from 'react-icons/fa';
+import { FaGithub } from "react-icons/fa";
 import {
   Box,
   Button,
@@ -396,15 +396,15 @@ export default function Home() {
         <Heading my={5} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
           <Tooltip label="View Source">
-            <IconButton
-              as="a"
-              href="https://github.com/nardis556/wcv2test"
-              aria-label="GitHub"
-              icon={<FaGithub />}
-            />
-          </Tooltip>
+          <IconButton
+            as="a"
+            href="https://github.com/nardis556/wcv2test"
+            aria-label="GitHub"
+            icon={<FaGithub />}
+          />
+        </Tooltip>
         </Heading>
-        <Button onClick={toggleColorMode}>
+        <Button onClick={toggleColorMode} width={100}>
           {colorMode === "light" ? "Dark" : "Light"}
         </Button>
       </Flex>
@@ -412,7 +412,7 @@ export default function Home() {
       <Box
         p={5}
         shadow="md"
-        borderWidth="1px"
+        borderWidth="1.5px"
         borderRadius="md"
         w="100%"
         bg={backgroundColor}
@@ -465,13 +465,14 @@ export default function Home() {
           <Box>
             <Flex alignItems="center">
               <Textarea
-                placeholder="Sign unlock request from IDEX"
+                placeholder="Sign simulated unlock message"
                 value={unlock}
                 onChange={(e) => setUnlock(e.target.value)}
                 isDisabled={!provider}
                 bg={inputColor}
                 color={textColor}
-                height={110}
+                height={90}
+                fontSize={11}
               />
             </Flex>
             <Button
@@ -495,7 +496,8 @@ export default function Home() {
                 isDisabled={!provider}
                 bg={inputColor}
                 color={textColor}
-                height={200}
+                height={120}
+                fontSize={11}
               />
             </Flex>
             <Button
