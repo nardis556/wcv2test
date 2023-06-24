@@ -99,7 +99,7 @@ export default function Home() {
       console.log("Automated flow: sending 0.001 MATIC to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
       await send000001Matic0xf69(nonce);
-      await sleep(sleepIncrement)
+      await sleep(sleepIncrement);
 
       console.log("Automated flow: sending 0.001 USDT to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
@@ -131,75 +131,91 @@ export default function Home() {
   }
 
   async function getNonce() {
-    const nonce = await web3Provider.getTransactionCount(account, 'pending');
+    let nonce;
+    try {
+      nonce = await web3Provider.getTransactionCount(account, "pending");
+    } catch (e) {
+      console.error(e);
+    }
     return ethers.utils.hexlify(nonce);
   }
-  
-  
-  async function getGasPrices() {
-    const response = await fetch("https://gasstation.polygon.technology/v2");
-    const data = await response.json();
-    const maxFee = ethers.utils
-      .parseUnits(data.fast.maxFee.toString(), "gwei")
-      .mul(2)
-      .add(1);
 
-    const maxPriorityFee = ethers.utils
-      .parseUnits(data.fast.maxPriorityFee.toString(), "gwei")
-      .mul(2)
-      .add(1);
-    return { maxFee, maxPriorityFee };
+  async function getGasPrices() {
+    try {
+      const response = await fetch("https://gasstation.polygon.technology/v2");
+      const data = await response.json();
+      const maxFee = ethers.utils
+        .parseUnits(data.fast.maxFee.toString(), "gwei")
+        .mul(2)
+        .add(1);
+
+      const maxPriorityFee = ethers.utils
+        .parseUnits(data.fast.maxPriorityFee.toString(), "gwei")
+        .mul(2)
+        .add(1);
+      return { maxFee, maxPriorityFee };
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function send0MaticSelf(nonce) {
-    const { maxFee, maxPriorityFee } = await getGasPrices();
-    console.log("Sending transaction...");
-    const transaction = {
-      from: account,
-      to: account,
-      value: ethers.utils.hexlify(0),
-      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-      maxFeePerGas: ethers.utils.hexlify(maxFee),
-      gas: ethers.utils.hexlify(21000),
-      nonce: nonce ? nonce : await getNonce(),
-      data: "0x",
-    };
+    try {
+      const { maxFee, maxPriorityFee } = await getGasPrices();
+      console.log("Sending transaction...");
+      const transaction = {
+        from: account,
+        to: account,
+        value: ethers.utils.hexlify(0),
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        gas: ethers.utils.hexlify(21000),
+        nonce: nonce ? nonce : await getNonce(),
+        data: "0x",
+      };
 
-    console.log(transaction)
+      console.log(transaction);
 
-    const tx = await provider.request({
-      method: "eth_sendTransaction",
-      params: [transaction],
-    });
+      const tx = await provider.request({
+        method: "eth_sendTransaction",
+        params: [transaction],
+      });
 
-    console.log("SIGNED: send0MaticSelf");
-    console.log(`Transaction details: ${tx}`);
+      console.log("SIGNED: send0MaticSelf");
+      console.log(`Transaction details: ${tx}`);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function send000001Matic0xf69(nonce) {
-    const { maxFee, maxPriorityFee } = await getGasPrices();
-    console.log("Sending transaction...");
-    const amountInWei = ethers.utils.parseUnits("0.000001", "ether");
-    const transaction = {
-      from: account,
-      to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
-      value: ethers.utils.hexlify(amountInWei),
-      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-      maxFeePerGas: ethers.utils.hexlify(maxFee),
-      gas: ethers.utils.hexlify(21000),
-      nonce: nonce ? nonce : await getNonce(),
-      data: "0x",
-    };
+    try {
+      const { maxFee, maxPriorityFee } = await getGasPrices();
+      console.log("Sending transaction...");
+      const amountInWei = ethers.utils.parseUnits("0.000001", "ether");
+      const transaction = {
+        from: account,
+        to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
+        value: ethers.utils.hexlify(amountInWei),
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        gas: ethers.utils.hexlify(21000),
+        nonce: nonce ? nonce : await getNonce(),
+        data: "0x",
+      };
 
-    console.log("Transaction details:", transaction);
+      console.log("Transaction details:", transaction);
 
-    const tx = await provider.request({
-      method: "eth_sendTransaction",
-      params: [transaction],
-    });
+      const tx = await provider.request({
+        method: "eth_sendTransaction",
+        params: [transaction],
+      });
 
-    console.log("SIGNED: send000001Matic0xf69");
-    console.log(`Transaction details: ${tx}`);
+      console.log("SIGNED: send000001Matic0xf69");
+      console.log(`Transaction details: ${tx}`);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   const ERC20_ABI = [
@@ -213,136 +229,156 @@ export default function Home() {
   ];
 
   async function sendToken(nonce) {
-    console.log("Sending tokens...");
+    try {
+      console.log("Sending tokens...");
 
-    const tokenContractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
-    const tokenContract = new ethers.Contract(
-      tokenContractAddress,
-      ERC20_ABI,
-      web3Provider.getSigner()
-    );
+      const tokenContractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
+      const tokenContract = new ethers.Contract(
+        tokenContractAddress,
+        ERC20_ABI,
+        web3Provider.getSigner()
+      );
 
-    const decimals = await tokenContract.decimals();
-    const amountInTokenUnits = ethers.utils.parseUnits("0.000001", decimals);
+      const decimals = await tokenContract.decimals();
+      const amountInTokenUnits = ethers.utils.parseUnits("0.000001", decimals);
 
-    const { maxFee, maxPriorityFee } = await getGasPrices();
+      const { maxFee, maxPriorityFee } = await getGasPrices();
 
-    const transactionParams = {
-      from: account,
-      to: tokenContractAddress,
-      data: tokenContract.interface.encodeFunctionData("transfer", [
-        "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
-        amountInTokenUnits,
-      ]),
-      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-      maxFeePerGas: ethers.utils.hexlify(maxFee),
-      gas: ethers.utils.hexlify(100000),
-      nonce: nonce ? nonce : await getNonce(),
-    };
+      const transactionParams = {
+        from: account,
+        to: tokenContractAddress,
+        data: tokenContract.interface.encodeFunctionData("transfer", [
+          "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
+          amountInTokenUnits,
+        ]),
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        gas: ethers.utils.hexlify(100000),
+        nonce: nonce ? nonce : await getNonce(),
+      };
 
-    console.log("Transaction details:", transactionParams);
+      console.log("Transaction details:", transactionParams);
 
-    const tx = await provider.request({
-      method: "eth_sendTransaction",
-      params: [transactionParams],
-    });
+      const tx = await provider.request({
+        method: "eth_sendTransaction",
+        params: [transactionParams],
+      });
 
-    console.log("SIGNED: sendToken");
-    console.log(`Transaction details: ${tx}`);
+      console.log("SIGNED: sendToken");
+      console.log(`Transaction details: ${tx}`);
+    } catch (e) {
+      console.error(error);
+    }
   }
 
   async function signMessage() {
-    console.log("Signing message...");
-    const params = [
-      ethers.utils.hexlify(ethers.utils.toUtf8Bytes(defaultUnlock)),
-      account,
-    ];
+    try {
+      console.log("Signing message...");
+      const params = [
+        ethers.utils.hexlify(ethers.utils.toUtf8Bytes(defaultUnlock)),
+        account,
+      ];
 
-    console.log("Signature parameters:", params);
+      console.log("Signature parameters:", params);
 
-    const signature = await provider.request({
-      method: "personal_sign",
-      params,
-    });
+      const signature = await provider.request({
+        method: "personal_sign",
+        params,
+      });
 
-    console.log("SIGNED: signMessage");
-    console.log(`Signature: ${signature}`);
+      console.log("SIGNED: signMessage");
+      console.log(`Signature: ${signature}`);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function createSigArray(orderParams) {
-    if (!orderParams || typeof orderParams !== "object") {
-      console.error("Invalid orderParams");
-      return null;
+    try {
+      if (!orderParams || typeof orderParams !== "object") {
+        console.error("Invalid orderParams");
+        return null;
+      }
+
+      const nonceAsByteArray = ethers.utils.arrayify(
+        `0x${orderParams.nonce.replace(/-/g, "")}`
+      );
+
+      return [
+        ["uint8", 4],
+        ["uint128", nonceAsByteArray],
+        ["address", orderParams.wallet],
+        ["string", orderParams.market],
+        ["uint8", 0],
+        ["uint8", 0],
+        ["string", orderParams.quantity],
+        ["bool", false],
+        ["string", ""],
+        ["string", ""],
+        ["string", ""],
+        ["uint8", 0],
+        ["uint8", 0],
+        ["uint64", 0],
+      ];
+    } catch (e) {
+      console.error(e);
     }
-
-    const nonceAsByteArray = ethers.utils.arrayify(
-      `0x${orderParams.nonce.replace(/-/g, "")}`
-    );
-
-    return [
-      ["uint8", 4],
-      ["uint128", nonceAsByteArray],
-      ["address", orderParams.wallet],
-      ["string", orderParams.market],
-      ["uint8", 0],
-      ["uint8", 0],
-      ["string", orderParams.quantity],
-      ["bool", false],
-      ["string", ""],
-      ["string", ""],
-      ["string", ""],
-      ["uint8", 0],
-      ["uint8", 0],
-      ["uint64", 0],
-    ];
   }
 
   const buildSigHashParams = async (signatureParameters) => {
-    let fields = signatureParameters.map((param) => param[0]);
-    let values = signatureParameters.map((param) => param[1]);
-    return ethers.utils.solidityKeccak256(fields, values);
+    try {
+      let fields = signatureParameters.map((param) => param[0]);
+      let values = signatureParameters.map((param) => param[1]);
+      return ethers.utils.solidityKeccak256(fields, values);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   async function signTrade() {
-    if (!provider) {
-      console.error("Provider is not connected");
-      return;
-    }
-
-    console.log("Signing trade...");
-    let tradeParams;
-
     try {
-      tradeParams = JSON.parse(trade);
-    } catch (error) {
-      console.error("Invalid trade parameters");
-      return;
+      if (!provider) {
+        console.error("Provider is not connected");
+        return;
+      }
+
+      console.log("Signing trade...");
+      let tradeParams;
+
+      try {
+        tradeParams = JSON.parse(trade);
+      } catch (error) {
+        console.error("Invalid trade parameters");
+        return;
+      }
+
+      console.log("Trade parameters:", tradeParams);
+
+      const sigArray = await createSigArray(tradeParams);
+      if (!sigArray) {
+        console.error("Failed to create signature array");
+        return;
+      }
+
+      console.log(sigArray);
+
+      const signatureParametersHash = await buildSigHashParams(sigArray);
+      if (!signatureParametersHash) {
+        console.error("Failed to build signature parameters hash");
+        return;
+      }
+
+      console.log("Signature parameters hash:", signatureParametersHash);
+
+      const signature = await provider.request({
+        method: "personal_sign",
+        params: [signatureParametersHash, account],
+      });
+      console.log("SIGNED: signTrade");
+      console.log(`Signature: ${signature}`);
+    } catch (e) {
+      console.error(e);
     }
-
-    console.log("Trade parameters:", tradeParams);
-
-    const sigArray = await createSigArray(tradeParams);
-    if (!sigArray) {
-      console.error("Failed to create signature array");
-      return;
-    }
-
-    console.log(sigArray);
-
-    const signatureParametersHash = await buildSigHashParams(sigArray);
-    if (!signatureParametersHash) {
-      console.error("Failed to build signature parameters hash");
-      return;
-    }
-
-    console.log("Signature parameters hash:", signatureParametersHash);
-
-    const signature = await provider.request({
-      method: "personal_sign",
-      params: [signatureParametersHash, account],
-    });
-    console.log("SIGNED: signTrade");
-    console.log(`Signature: ${signature}`);
   }
 
   function clearLocalStorage() {
