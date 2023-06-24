@@ -113,8 +113,8 @@ export default function Home() {
 
       alert("Automated flow completed successfully.");
     } catch (error) {
-      console.error("An error occurred during the automated flow:", error);
-      alert(`An error occurred during the automated flow. See console for more info${error}`);
+      console.error("An error occurred during the automated flow:", JSON.stringify(error, null, 2));
+      alert(`An error occurred during the automated flow. See console for more info${JSON.stringify(error, null, 2)}`);
     }
   }
 
