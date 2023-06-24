@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaGithub } from 'react-icons/fa';
 import {
   Box,
   Button,
@@ -12,6 +13,7 @@ import {
   useColorMode,
   ColorModeScript,
   useColorModeValue,
+  IconButton,
   Spinner,
 } from "@chakra-ui/react";
 import { InfoIcon } from "@chakra-ui/icons";
@@ -393,8 +395,13 @@ export default function Home() {
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Heading my={5} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
-          <Tooltip href="https://github.com/nardis556/wcv2test" aria-label="GitHub">
-            <InfoIcon color="green.500" ml={2} />
+          <Tooltip label="View Source">
+            <IconButton
+              as="a"
+              href="https://github.com/nardis556/wcv2test"
+              aria-label="GitHub"
+              icon={<FaGithub />}
+            />
           </Tooltip>
         </Heading>
         <Button onClick={toggleColorMode}>
