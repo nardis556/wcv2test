@@ -98,12 +98,12 @@ export default function Home() {
       await send0MaticSelf(nonce);
       await sleep(sleepIncrement);
 
-      console.log("Automated flow: sending 0.001 MATIC to 0xF69");
+      console.log("Automated flow: sending 0.000001 MATIC to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
       await send000001Matic0xf69(nonce);
       await sleep(sleepIncrement);
 
-      console.log("Automated flow: sending 0.001 USDT to 0xF69");
+      console.log("Automated flow: sending 0.000001 USDT to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
       await sendToken(nonce);
       await sleep(sleepIncrement);
@@ -393,7 +393,7 @@ export default function Home() {
     <Container maxW="container.md">
       <ColorModeScript initialColorMode="dark" />
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Heading my={5} size="md">
+        <Heading my={4} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
           <Tooltip label="View Source">
             <IconButton
@@ -420,7 +420,7 @@ export default function Home() {
         borderColor={borderColor}
       >
         <Flex>
-          <Heading ml={4} size="md">
+          <Heading size="md">
             {account
               ? `${account.substring(0, 5) + "~" + account.slice(-4)}`
               : "No wallet connected"}
@@ -440,7 +440,7 @@ export default function Home() {
             </Button>
           )}
         </Flex>
-        <Stack spacing={6} mt={6}>
+        <Stack spacing={4} mt={5}>
           <Button
             colorScheme={buttonColorScheme}
             onClick={() => send0MaticSelf()}
