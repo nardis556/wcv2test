@@ -51,26 +51,31 @@ export default function Home() {
   async function connectWallet() {
     console.log("Connecting wallet...");
     setLoading(true);
-    const provider = await EthereumProvider.init({
-      projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-      chains: [137],
-      showQrModal: true,
-      rpcMap: {
-        137: "https://polygon-rpc.com",
-      },
-    });
-
-    await provider.enable();
-
-    const web3Provider = new ethers.providers.Web3Provider(provider);
-    const signer = web3Provider.getSigner();
-    const account = await signer.getAddress();
-
-    console.log("Wallet connected:", account);
-
-    setProvider(provider);
-    setWeb3Provider(web3Provider);
-    setAccount(account);
+    try {
+      const provider = await EthereumProvider.init({
+        projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
+        chains: [137],
+        showQrModal: true,
+        rpcMap: {
+          137: "https://polygon-rpc.com",
+        },
+      });
+  
+      await provider.enable();
+  
+      const web3Provider = new ethers.providers.Web3Provider(provider);
+      const signer = web3Provider.getSigner();
+      const account = await signer.getAddress();
+  
+      console.log("Wallet connected:", account);
+  
+      setProvider(provider);
+      setWeb3Provider(web3Provider);
+      setAccount(account);
+    } catch (e) {
+      console.log(e)
+      clearLocalStorage()
+    }
   }
 
   function sleep(ms) {
