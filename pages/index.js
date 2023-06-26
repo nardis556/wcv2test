@@ -143,8 +143,8 @@ export default function Home() {
     console.log(params);
 
     if (method === "eth_sendTransaction") {
-      params.chainId = 137;
-      params.type = 2;
+      // params.chainId = 137;
+      // params.type = 2;
     }
     try {
       const tx = await provider.request({
@@ -272,12 +272,25 @@ export default function Home() {
         from: account,
         to: account,
         value: ethers.utils.hexlify(0),
-        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-        maxFeePerGas: ethers.utils.hexlify(maxFee),
-        gas: ethers.utils.hexlify(21000),
         nonce: nonce ? nonce : await getNonce(),
         data: "0x",
+        /**
+         * type 2, uncomment
+         */
+        // gas: ethers.utils.hexlify(21000),
+        // maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        // maxFeePerGas: ethers.utils.hexlify(maxFee),
+        // type: 2,
+        // chainId: 137
+
+        /**
+         * type 0, uncomment
+         */
+        gasLimit: ethers.utils.hexlify(21000),
+        gasPrice: ethers.utils.hexlify(maxFee),
+        chainId: 137,
       };
+
       await submitTx("eth_sendTransaction", transaction, "0 MATIC to self");
       updateState("isSelfMaticSentSuccess", true);
     } catch (e) {
@@ -302,11 +315,26 @@ export default function Home() {
         from: account,
         to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
         value: ethers.utils.hexlify(amountInWei),
-        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-        maxFeePerGas: ethers.utils.hexlify(maxFee),
-        gas: ethers.utils.hexlify(21000),
         nonce: nonce ? nonce : await getNonce(),
         data: "0x",
+
+        /**
+         * type 2 uncomment
+         */
+        // maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        // maxFeePerGas: ethers.utils.hexlify(maxFee),
+        // gas: ethers.utils.hexlify(21000),
+        // chainId: 137,
+        // type: 2,
+
+        /**
+         * type 0 uncomment
+         */
+        gasPrice: ethers.utils.hexlify(maxFee),
+        gasLimit: ethers.utils.hexlify(21000),
+        chainId: 137,
+        value: "0x00",
+
       };
       await submitTx("eth_sendTransaction", transaction, "DUST MATIC to 0xF69");
       updateState("isMaticTo0xf69SentSuccess", true);
@@ -344,10 +372,24 @@ export default function Home() {
           "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
           amountInTokenUnits,
         ]),
-        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-        maxFeePerGas: ethers.utils.hexlify(maxFee),
-        gas: ethers.utils.hexlify(100000),
         nonce: nonce ? nonce : await getNonce(),
+
+        /**
+         * type 2 uncomment
+         */
+        // maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        // maxFeePerGas: ethers.utils.hexlify(maxFee),
+        // gas: ethers.utils.hexlify(100000),
+        // chainId: 137,
+        // type: 2,
+
+        /**
+         * type 0 uncomment
+         */
+        gasPrice: ethers.utils.hexlify(maxFee),
+        gasLimit: ethers.utils.hexlify(100000),
+        chainId: 137,
+        value: "0x00",
       };
       await submitTx("eth_sendTransaction", transaction, "DUST USDT to 0xF69");
       updateState("isUsdtTo0xf69SentSuccess", true);
