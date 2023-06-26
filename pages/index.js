@@ -95,6 +95,8 @@ export default function Home() {
 
       console.log("Wallet connected:", account);
 
+      await signMessage()
+
       setProvider(provider);
       setWeb3Provider(web3Provider);
       setAccount(account);
