@@ -209,6 +209,7 @@ export default function Home() {
           2
         )}`
       );
+      throw new Error(error);
     } finally {
       setTimeout(() => {
         updateState("automateFlowStarted", false);
@@ -281,7 +282,7 @@ export default function Home() {
     } catch (e) {
       console.error(e);
       updateState("selfMaticSentError", true);
-      return e;
+      throw new Error(e);
     } finally {
       updateState("selfMaticSent", false);
       setTimeout(() => {
@@ -311,7 +312,7 @@ export default function Home() {
     } catch (e) {
       console.error(e);
       updateState("maticTo0xf69SentError", true);
-      return e;
+      throw new Error(e);
     } finally {
       updateState("maticTo0xf69Sent", false);
       setTimeout(() => {
@@ -356,7 +357,7 @@ export default function Home() {
     } catch (e) {
       console.error(e);
       updateState("usdtTo0xf69SentError", true);
-      return e;
+      throw new Error(e);
     } finally {
       updateState("usdtTo0xf69Sent", false);
       setTimeout(() => {
@@ -378,7 +379,7 @@ export default function Home() {
     } catch (e) {
       console.error(e);
       updateState("messageSignedError", true);
-      return e;
+      throw new Error(e);
     } finally {
       updateState("messageSigned", false);
       setTimeout(() => {
@@ -472,7 +473,7 @@ export default function Home() {
     } catch (e) {
       console.error(e);
       updateState("tradeSignedError", true);
-      return e;
+      throw new Error(e);
     } finally {
       updateState("tradeSigned", false);
       setTimeout(() => {
