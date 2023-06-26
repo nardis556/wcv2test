@@ -86,6 +86,12 @@ export default function Home() {
         rpcMap: {
           137: "https://polygon-rpc.com",
         },
+        metadata: {
+          name: "wcv2test",
+          description: "WalletConnect v2 Test",
+          url: "https://wc2-test.lars.vodka/",
+          icons: ["https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000"]
+        }
       });
 
       await provider.enable();
@@ -95,6 +101,12 @@ export default function Home() {
       const account = await signer.getAddress();
 
       console.log("Wallet connected:", account);
+
+      console.log('Provider details')
+      console.log(provider)
+
+      console.log('ChainId:')
+      console.log(await provider.request({ method: 'eth_chainId' }))
 
       setProvider(provider);
       setWeb3Provider(web3Provider);
@@ -120,7 +132,10 @@ export default function Home() {
       });
     } catch (e) {
       console.log(e);
-      clearLocalStorage();
+      alert("Wallet Connection Failed. Restarting App...")
+      setTimeout(() => {
+        clearLocalStorage();
+      }, 5000);
     }
   }
 
@@ -289,6 +304,7 @@ export default function Home() {
         gasLimit: ethers.utils.hexlify(21000),
         gasPrice: ethers.utils.hexlify(maxFee),
         chainId: 137,
+        type: 0
       };
 
       await submitTx("eth_sendTransaction", transaction, "0 MATIC to self");
@@ -334,7 +350,7 @@ export default function Home() {
         gasLimit: ethers.utils.hexlify(21000),
         chainId: 137,
         value: "0x00",
-
+        type: 0
       };
       await submitTx("eth_sendTransaction", transaction, "DUST MATIC to 0xF69");
       updateState("isMaticTo0xf69SentSuccess", true);
@@ -390,6 +406,7 @@ export default function Home() {
         gasLimit: ethers.utils.hexlify(100000),
         chainId: 137,
         value: "0x00",
+        type: 0
       };
       await submitTx("eth_sendTransaction", transaction, "DUST USDT to 0xF69");
       updateState("isUsdtTo0xf69SentSuccess", true);
