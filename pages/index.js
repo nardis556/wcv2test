@@ -87,7 +87,7 @@ export default function Home() {
         },
       });
 
-      await provider.enable();
+      await provider.enable()
 
       const web3Provider = new ethers.providers.Web3Provider(provider);
       const signer = web3Provider.getSigner();
@@ -95,12 +95,14 @@ export default function Home() {
 
       console.log("Wallet connected:", account);
 
-      await signMessage()
-
       setProvider(provider);
       setWeb3Provider(web3Provider);
       setAccount(account);
       updateState("walletConnecting", false);
+
+      provider.on("connect", (info) => {
+        console.log(info);
+        });
 
       provider.on("disconnect", (code, reason) => {
         console.log(code, reason);
@@ -152,7 +154,7 @@ export default function Home() {
         mode === "Sending Transaction" ? "TRANSACTION SENT" : "MESSAGE SIGNED"
       );
       console.log(tx);
-      console.log(
+      console.info(
         "\n---------SUCCESS---------",
         name,
         "---------SUCCESS---------\n"
@@ -166,12 +168,13 @@ export default function Home() {
         mode === "Sending Transaction" ? "TRANSACTION FAILED" : "MESSAGE FAILED"
       );
       console.log(e);
-      console.log(
+      console.error(
         "\n---------ERROR---------",
         name,
         "---------ERROR---------\n"
       );
-      return e;
+      throw new Error(e);
+      // return e;
     }
   }
 
