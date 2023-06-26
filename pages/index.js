@@ -9,6 +9,7 @@ import {
   Spacer,
   Stack,
   Textarea,
+  FormControl,
   Tooltip,
   useColorMode,
   ColorModeScript,
@@ -137,9 +138,9 @@ export default function Home() {
       );
       console.log(tx);
       console.log(
-        "\n----------END----------",
+        "\n---------SUCCESS---------",
         name,
-        "----------END----------\n"
+        "---------SUCCESS---------\n"
       );
       return tx;
     } catch (e) {
@@ -151,9 +152,9 @@ export default function Home() {
       );
       console.log(e);
       console.log(
-        "\n----------END----------",
+        "\n---------ERROR---------",
         name,
-        "----------END----------\n"
+        "---------ERROR---------\n"
       );
       return e;
     }
@@ -469,6 +470,7 @@ export default function Home() {
         [account, signatureParametersHash],
         "Simulated Trade."
       );
+
       updateState("isTradeSignedSuccess", true);
     } catch (e) {
       console.error(e);
@@ -580,7 +582,7 @@ export default function Home() {
                 isDisabled={!provider}
                 bg={inputColor}
                 color={textColor}
-                height={90}
+                height={50}
                 fontSize={11}
               />
             </Flex>
@@ -593,7 +595,7 @@ export default function Home() {
               width={260}
             >
               Sign Simulated Unlock
-              <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
+              <Tooltip label="Simulate Unlock Message" aria-label="A tooltip">
                 <InfoIcon color="yellow.500" ml={2} />
               </Tooltip>
               {state.isMessageSignedSuccess && <CheckIcon ml={2} />}
