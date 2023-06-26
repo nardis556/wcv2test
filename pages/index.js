@@ -9,7 +9,6 @@ import {
   Spacer,
   Stack,
   Textarea,
-  FormControl,
   Tooltip,
   useColorMode,
   ColorModeScript,
@@ -72,7 +71,7 @@ export default function Home() {
   const backgroundColor = useColorModeValue("white", "#181818");
   const textColor = useColorModeValue("black", "white");
   const buttonColorScheme = useColorModeValue("blue", "teal");
-  const inputColor = useColorModeValue("gray.100", "gray.800");
+  const inputColor = useColorModeValue("gray.200", "gray.800");
   const borderColor = useColorModeValue("gray.300", "gray.600");
 
   async function connectWallet() {
@@ -99,8 +98,22 @@ export default function Home() {
       setProvider(provider);
       setWeb3Provider(web3Provider);
       setAccount(account);
-
       updateState("walletConnecting", false);
+
+      provider.on("disconnect", (code, reason) => {
+        console.log(code, reason);
+        clearLocalStorage();
+      });
+
+      provider.on("accounts_changed", (accounts) => {
+        console.log(accounts);
+        disconnectWallet();
+      });
+
+      provider.on("message", (message) => {
+        console.log(message);
+      });
+
     } catch (e) {
       console.log(e);
       clearLocalStorage();
@@ -227,11 +240,11 @@ export default function Home() {
     setWeb3Provider(null);
     setAccount("");
     console.log("Wallet disconnected");
-    clearLocalStorage();
-    console.log("Local storage cleared");
     setTimeout(() => {
+      clearLocalStorage();
+      console.log("Local storage cleared");
       window.location.reload();
-    }, 1000);
+    }, 3000);
   }
 
   async function getNonce() {
