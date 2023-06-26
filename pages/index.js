@@ -27,6 +27,7 @@ import {
 } from "../constants/packages";
 
 import { ERC20_ABI } from "../utils/abi";
+import { getGasPrices } from "@/utils/transactionUtils";
 
 export default function Home() {
   const [state, setState] = useState({
@@ -87,7 +88,7 @@ export default function Home() {
         },
       });
 
-      await provider.enable()
+      await provider.enable();
 
       const web3Provider = new ethers.providers.Web3Provider(provider);
       const signer = web3Provider.getSigner();
@@ -102,7 +103,7 @@ export default function Home() {
 
       provider.on("connect", (info) => {
         console.log(info);
-        });
+      });
 
       provider.on("disconnect", (code, reason) => {
         console.log(code, reason);
@@ -117,7 +118,6 @@ export default function Home() {
       provider.on("message", (message) => {
         console.log(message);
       });
-
     } catch (e) {
       console.log(e);
       clearLocalStorage();
@@ -134,6 +134,9 @@ export default function Home() {
       name,
       "----------START----------\n"
     );
+    console.log(`${mode} for ${name}`);
+    console.log("Transaction params:");
+    console.log(params);
     const mode =
       method === "eth_sendTransaction"
         ? "Sending Transaction"
@@ -147,9 +150,6 @@ export default function Home() {
         method: method,
         params: method === "eth_sendTransaction" ? [params] : params,
       });
-      console.log(`${mode} for ${name}`);
-      console.log("Transaction params:");
-      console.log(params);
       console.log(
         mode === "Sending Transaction" ? "TRANSACTION SENT" : "MESSAGE SIGNED"
       );
@@ -175,6 +175,17 @@ export default function Home() {
       );
       throw new Error(e);
       // return e;
+    }
+  }
+
+  async function getNonce() {
+    let nonce;
+    try {
+      nonce = await web3Provider.getTransactionCount(account, "pending");
+      return ethers.utils.hexlify(nonce);
+    } catch (e) {
+      console.error(e);
+      return e;
     }
   }
 
@@ -252,41 +263,11 @@ export default function Home() {
     }, 3000);
   }
 
-  async function getNonce() {
-    let nonce;
-    try {
-      nonce = await web3Provider.getTransactionCount(account, "pending");
-      return ethers.utils.hexlify(nonce);
-    } catch (e) {
-      console.error(e);
-      return e;
-    }
-  }
-
-  async function getGasPrices() {
-    try {
-      const response = await fetch("https://gasstation.polygon.technology/v2");
-      const data = await response.json();
-      const maxFee = ethers.utils
-        .parseUnits(data.fast.maxFee.toString(), "gwei")
-        .mul(2)
-        .add(1);
-      const maxPriorityFee = ethers.utils
-        .parseUnits(data.fast.maxPriorityFee.toString(), "gwei")
-        .mul(2)
-        .add(1);
-      return { maxFee, maxPriorityFee };
-    } catch (e) {
-      console.error(e);
-      return e;
-    }
-  }
-
   async function send0MaticSelf(nonce) {
     updateState("selfMaticSent", true);
     try {
       const { maxFee, maxPriorityFee } = await getGasPrices();
-      const transaction = {
+      let transaction = {
         from: account,
         to: account,
         value: ethers.utils.hexlify(0),
@@ -316,7 +297,7 @@ export default function Home() {
     try {
       const { maxFee, maxPriorityFee } = await getGasPrices();
       const amountInWei = ethers.utils.parseUnits("0.000001", "ether");
-      const transaction = {
+      let transaction = {
         from: account,
         to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
         value: ethers.utils.hexlify(amountInWei),
@@ -355,7 +336,7 @@ export default function Home() {
 
       const { maxFee, maxPriorityFee } = await getGasPrices();
 
-      const transactionParams = {
+      let transaction = {
         from: account,
         to: tokenContractAddress,
         data: tokenContract.interface.encodeFunctionData("transfer", [
@@ -367,11 +348,7 @@ export default function Home() {
         gas: ethers.utils.hexlify(100000),
         nonce: nonce ? nonce : await getNonce(),
       };
-      await submitTx(
-        "eth_sendTransaction",
-        transactionParams,
-        "DUST USDT to 0xF69"
-      );
+      await submitTx("eth_sendTransaction", transaction, "DUST USDT to 0xF69");
       updateState("isUsdtTo0xf69SentSuccess", true);
     } catch (e) {
       console.error(e);
