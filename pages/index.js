@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa";
-import packageJson from "../package.json";
 import {
   Box,
   Button,
@@ -15,42 +14,53 @@ import {
   ColorModeScript,
   useColorModeValue,
   IconButton,
-  Spinner,
-  Center,
 } from "@chakra-ui/react";
-import { InfoIcon, CheckIcon } from "@chakra-ui/icons";
+import { InfoIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { ethers } from "ethers";
 
-const defaultTrade = {
-  market: "USDT-USDC",
-  nonce: "3ebb6ba0-0712-11ee-a183-032e8f54ac8a",
-  quantity: "33.06375000",
-  side: "buy",
-  type: "market",
-  wallet: "0x0000000000000000000000000000000000000000",
-};
+import { defaultTrade, defaultUnlock } from "../constants/params";
+import {
+  ethersVersion,
+  walletconnectModalVersion,
+  walletconnectEthereumProviderVersion,
+} from "../constants/packages";
 
-const defaultUnlock = `Hello from the TEST team! Sign this message to prove you have control of this wallet. This won't cost you any gas fees.
-
-Message: ea365a60-30c3-11ed-a65a-4fead7562786`;
-
-const walletconnectEthereumProviderVersion =
-  packageJson.dependencies["@walletconnect/ethereum-provider"];
-const walletconnectModalVersion =
-  packageJson.dependencies["@walletconnect/modal"];
-const ethersVersion = packageJson.dependencies["ethers"];
+import { ERC20_ABI } from "../utils/abi";
 
 export default function Home() {
-  const [loading, setLoading] = useState(false);
+  const [state, setState] = useState({
+    walletConnecting: false,
 
-  const [isSelfMaticSent, setIsSelfMaticSent] = useState(false);
-  const [isMaticTo0xf69Sent, setIsMaticTo0xf69Sent] = useState(false);
-  const [isUsdtTo0xf69Sent, setIsUsdtTo0xf69Sent] = useState(false);
-  const [isTradeSigned, setIsTradeSigned] = useState(false);
-  const [isMessageSigned, setIsMessageSigned] = useState(false);
-  const [isAutomatedFlowStarted, setIsAutomatedFlowStarted] = useState(false);
-  
+    selfMaticSent: false,
+    selfMaticSentError: false,
+    isSelfMaticSentSuccess: false,
+
+    maticTo0xf69Sent: false,
+    maticTo0xf69SentError: false,
+    isMaticTo0xf69SentSuccess: false,
+
+    usdtTo0xf69Sent: false,
+    usdtTo0xf69SentError: false,
+    isUsdtTo0xf69SentSuccess: false,
+
+    messageSigned: false,
+    messageSignedError: false,
+    isMessageSignedSuccess: false,
+
+    tradeSigned: false,
+    tradeSignedError: false,
+    isTradeSignedSuccess: false,
+
+    automateFlowStarted: false,
+    automateFlowStartedError: false,
+    isAutomateFlowStartedSuccess: false,
+  });
+
+  const updateState = (key, value) => {
+    setState((prevState) => ({ ...prevState, [key]: value }));
+  };
+
   const { colorMode, toggleColorMode } = useColorMode();
   const [account, setAccount] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
@@ -66,7 +76,7 @@ export default function Home() {
 
   async function connectWallet() {
     console.log("Connecting wallet...");
-    setLoading(true);
+    updateState("walletConnecting", true);
     try {
       const provider = await EthereumProvider.init({
         projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
@@ -88,6 +98,8 @@ export default function Home() {
       setProvider(provider);
       setWeb3Provider(web3Provider);
       setAccount(account);
+
+      updateState("walletConnecting", false);
     } catch (e) {
       console.log(e);
       clearLocalStorage();
@@ -98,8 +110,57 @@ export default function Home() {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  async function submitTx(method, params, name) {
+    console.log(
+      "\n----------START----------",
+      name,
+      "----------START----------\n"
+    );
+    const mode =
+      method === "eth_sendTransaction"
+        ? "Sending Transaction"
+        : "Signing Message";
+    if (method === "eth_sendTransaction") {
+      params.chainId = 137;
+      params.type = 2;
+    }
+    try {
+      const tx = await provider.request({
+        method: method,
+        params: method === "eth_sendTransaction" ? [params] : params,
+      });
+      console.log(`${mode} for ${name}`);
+      console.log("Transaction params:");
+      console.log(params);
+      console.log(
+        mode === "Sending Transaction" ? "TRANSACTION SENT" : "MESSAGE SIGNED"
+      );
+      console.log(tx);
+      console.log(
+        "\n----------END----------",
+        name,
+        "----------END----------\n"
+      );
+      return tx;
+    } catch (e) {
+      console.log(`${mode} for ${name}`);
+      console.log("Transaction params:");
+      console.log(params);
+      console.log(
+        mode === "Sending Transaction" ? "TRANSACTION FAILED" : "MESSAGE FAILED"
+      );
+      console.log(e);
+      console.log(
+        "\n----------END----------",
+        name,
+        "----------END----------\n"
+      );
+      return e;
+    }
+  }
+
   async function automateFlow() {
-    setIsAutomatedFlowStarted(true);
+    updateState("automateFlowStarted", true);
     const sleepIncrement = 2000;
 
     try {
@@ -111,7 +172,7 @@ export default function Home() {
 
       await sleep(sleepIncrement);
 
-      console.log("Automated flow: signing message");
+      console.log("Automated flow: Signing Simulated Unlock");
       await signMessage();
       await sleep(sleepIncrement);
 
@@ -120,22 +181,23 @@ export default function Home() {
       await send0MaticSelf(nonce);
       await sleep(sleepIncrement);
 
-      console.log("Automated flow: sending 0.000001 MATIC to 0xF69");
+      console.log("Automated flow: sending DUST MATIC to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
-      await send000001Matic0xf69(nonce);
+      await sendDustMatic0xf69(nonce);
       await sleep(sleepIncrement);
 
-      console.log("Automated flow: sending 0.000001 USDT to 0xF69");
+      console.log("Automated flow: sending DUST USDT to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
-      await sendToken(nonce);
+      await sendDustUSDTto0xf69(nonce);
       await sleep(sleepIncrement);
 
-      console.log("Automated flow: signing trade");
+      console.log("Automated flow: Signing Simulated Trade.");
       await signTrade();
 
-      alert("Automated flow completed successfully.");
-      setIsAutomatedFlowStarted(false);
+      alert("Automated Flow Done. Please Check Console For Errors.");
+      updateState("automateFlowStarted", false);
     } catch (error) {
+      updateState("automateFlowStartedError", true);
       console.error(
         "An error occurred during the automated flow:",
         JSON.stringify(error, null, 2)
@@ -147,6 +209,12 @@ export default function Home() {
           2
         )}`
       );
+    } finally {
+      setTimeout(() => {
+        updateState("automateFlowStarted", false);
+        updateState("automateFlowStartedError", false);
+        updateState("isAutomateFlowStartedSuccess", false);
+      }, 5000);
     }
   }
 
@@ -168,11 +236,11 @@ export default function Home() {
     let nonce;
     try {
       nonce = await web3Provider.getTransactionCount(account, "pending");
+      return ethers.utils.hexlify(nonce);
     } catch (e) {
       console.error(e);
       return e;
     }
-    return ethers.utils.hexlify(nonce);
   }
 
   async function getGasPrices() {
@@ -183,7 +251,6 @@ export default function Home() {
         .parseUnits(data.fast.maxFee.toString(), "gwei")
         .mul(2)
         .add(1);
-
       const maxPriorityFee = ethers.utils
         .parseUnits(data.fast.maxPriorityFee.toString(), "gwei")
         .mul(2)
@@ -196,10 +263,9 @@ export default function Home() {
   }
 
   async function send0MaticSelf(nonce) {
-    setIsSelfMaticSent(true);
+    updateState("selfMaticSent", true);
     try {
       const { maxFee, maxPriorityFee } = await getGasPrices();
-      console.log("Sending transaction...");
       const transaction = {
         from: account,
         to: account,
@@ -210,28 +276,25 @@ export default function Home() {
         nonce: nonce ? nonce : await getNonce(),
         data: "0x",
       };
-
-      console.log(transaction);
-
-      const tx = await provider.request({
-        method: "eth_sendTransaction",
-        params: [transaction],
-      });
-
-      console.log("SIGNED: send0MaticSelf");
-      console.log(`Transaction details: ${tx}`);
+      await submitTx("eth_sendTransaction", transaction, "0 MATIC to self");
+      updateState("isSelfMaticSentSuccess", true);
     } catch (e) {
       console.error(e);
+      updateState("selfMaticSentError", true);
       return e;
+    } finally {
+      updateState("selfMaticSent", false);
+      setTimeout(() => {
+        updateState("isSelfMaticSentSuccess", false);
+        updateState("selfMaticSentError", false);
+      }, 5000);
     }
-    setIsSelfMaticSent(false);
   }
 
-  async function send000001Matic0xf69(nonce) {
-    setIsMaticTo0xf69Sent(true);
+  async function sendDustMatic0xf69(nonce) {
+    updateState("maticTo0xf69Sent", true);
     try {
       const { maxFee, maxPriorityFee } = await getGasPrices();
-      console.log("Sending transaction...");
       const amountInWei = ethers.utils.parseUnits("0.000001", "ether");
       const transaction = {
         from: account,
@@ -243,45 +306,30 @@ export default function Home() {
         nonce: nonce ? nonce : await getNonce(),
         data: "0x",
       };
-
-      console.log("Transaction details:", transaction);
-
-      const tx = await provider.request({
-        method: "eth_sendTransaction",
-        params: [transaction],
-      });
-
-      console.log("SIGNED: send000001Matic0xf69");
-      console.log(`Transaction details: ${tx}`);
+      await submitTx("eth_sendTransaction", transaction, "DUST MATIC to 0xF69");
+      updateState("isMaticTo0xf69SentSuccess", true);
     } catch (e) {
       console.error(e);
+      updateState("maticTo0xf69SentError", true);
       return e;
+    } finally {
+      updateState("maticTo0xf69Sent", false);
+      setTimeout(() => {
+        updateState("isMaticTo0xf69SentSuccess", false);
+        updateState("maticTo0xf69SentError", false);
+      }, 5000);
     }
-    setIsMaticTo0xf69Sent(false);
   }
 
-  const ERC20_ABI = [
-    "function name() view returns (string)",
-    "function symbol() view returns (string)",
-    "function decimals() view returns (uint8)",
-    "function totalSupply() view returns (uint256)",
-    "function balanceOf(address) view returns (uint256)",
-    "function transfer(address to, uint256 value) returns (boolean)",
-    "event Transfer(address indexed from, address indexed to, uint256 value)",
-  ];
-
-  async function sendToken(nonce) {
-    setIsUsdtTo0xf69Sent(true);
+  async function sendDustUSDTto0xf69(nonce) {
+    updateState("usdtTo0xf69Sent", true);
     try {
-      console.log("Sending tokens...");
-
       const tokenContractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
       const tokenContract = new ethers.Contract(
         tokenContractAddress,
         ERC20_ABI,
         web3Provider.getSigner()
       );
-
       const decimals = await tokenContract.decimals();
       const amountInTokenUnits = ethers.utils.parseUnits("0.000001", decimals);
 
@@ -299,45 +347,45 @@ export default function Home() {
         gas: ethers.utils.hexlify(100000),
         nonce: nonce ? nonce : await getNonce(),
       };
-
-      console.log("Transaction details:", transactionParams);
-
-      const tx = await provider.request({
-        method: "eth_sendTransaction",
-        params: [transactionParams],
-      });
-
-      console.log("SIGNED: sendToken");
-      console.log(`Transaction details: ${tx}`);
+      await submitTx(
+        "eth_sendTransaction",
+        transactionParams,
+        "DUST USDT to 0xF69"
+      );
+      updateState("isUsdtTo0xf69SentSuccess", true);
     } catch (e) {
       console.error(e);
+      updateState("usdtTo0xf69SentError", true);
+      return e;
+    } finally {
+      updateState("usdtTo0xf69Sent", false);
+      setTimeout(() => {
+        updateState("isUsdtTo0xf69SentSuccess", false);
+        updateState("usdtTo0xf69SentError", false);
+      }, 5000);
     }
-    setIsUsdtTo0xf69Sent(false);
   }
 
   async function signMessage() {
-    setIsMessageSigned(true);
+    updateState("messageSigned", true);
     try {
-      console.log("Signing message...");
       const params = [
         ethers.utils.hexlify(ethers.utils.toUtf8Bytes(defaultUnlock)),
         account,
       ];
-
-      console.log("Signature parameters:", params);
-
-      const signature = await provider.request({
-        method: "personal_sign",
-        params,
-      });
-
-      console.log("SIGNED: signMessage");
-      console.log(`Signature: ${signature}`);
+      await submitTx("personal_sign", params, "Simulated Unlock.");
+      updateState("isMessageSignedSuccess", true);
     } catch (e) {
       console.error(e);
+      updateState("messageSignedError", true);
       return e;
+    } finally {
+      updateState("messageSigned", false);
+      setTimeout(() => {
+        updateState("isMessageSignedSuccess", false);
+        updateState("messageSignedError", false);
+      }, 5000);
     }
-    setIsMessageSigned(false);
   }
 
   async function createSigArray(orderParams) {
@@ -350,7 +398,6 @@ export default function Home() {
       const nonceAsByteArray = ethers.utils.arrayify(
         `0x${orderParams.nonce.replace(/-/g, "")}`
       );
-
       return [
         ["uint8", 4],
         ["uint128", nonceAsByteArray],
@@ -385,7 +432,7 @@ export default function Home() {
   };
 
   async function signTrade() {
-    setIsTradeSigned(true);
+    updateState("tradeSigned", true);
     try {
       if (!provider) {
         console.error("Provider is not connected");
@@ -402,15 +449,11 @@ export default function Home() {
         return;
       }
 
-      console.log("Trade parameters:", tradeParams);
-
       const sigArray = await createSigArray(tradeParams);
       if (!sigArray) {
         console.error("Failed to create signature array");
         return;
       }
-
-      console.log(sigArray);
 
       const signatureParametersHash = await buildSigHashParams(sigArray);
       if (!signatureParametersHash) {
@@ -420,17 +463,23 @@ export default function Home() {
 
       console.log("Signature parameters hash:", signatureParametersHash);
 
-      const signature = await provider.request({
-        method: "personal_sign",
-        params: [signatureParametersHash, account],
-      });
-      console.log("SIGNED: signTrade");
-      console.log(`Signature: ${signature}`);
+      await submitTx(
+        "personal_sign",
+        [account, signatureParametersHash],
+        "Simulated Trade."
+      );
+      updateState("isTradeSignedSuccess", true);
     } catch (e) {
       console.error(e);
+      updateState("tradeSignedError", true);
       return e;
+    } finally {
+      updateState("tradeSigned", false);
+      setTimeout(() => {
+        updateState("isTradeSignedSuccess", false);
+        updateState("tradeSignedError", false);
+      }, 5000);
     }
-    setIsTradeSigned(false);
   }
 
   function clearLocalStorage() {
@@ -484,7 +533,7 @@ export default function Home() {
             <Button
               colorScheme={buttonColorScheme}
               onClick={connectWallet}
-              isLoading={loading}
+              isLoading={state.walletConnecting}
             >
               Connect Wallet
             </Button>
@@ -495,25 +544,31 @@ export default function Home() {
             colorScheme={buttonColorScheme}
             onClick={() => send0MaticSelf()}
             isDisabled={!provider}
-            isLoading={isSelfMaticSent}
+            isLoading={state.selfMaticSent}
           >
             Send 0 MATIC Self Transaction
+            {state.isSelfMaticSentSuccess && <CheckIcon ml={2} />}
+            {state.selfMaticSentError && <CloseIcon ml={2} />}
           </Button>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={() => send000001Matic0xf69()}
+            onClick={() => sendDustMatic0xf69()}
             isDisabled={!provider}
-            isLoading={isMaticTo0xf69Sent}
+            isLoading={state.maticTo0xf69Sent}
           >
-            Send 0.000001 MATIC to 0xF69
+            Send DUST MATIC to 0xF69
+            {state.isMaticTo0xf69SentSuccess && <CheckIcon ml={2} />}
+            {state.maticTo0xf69SentError && <CloseIcon ml={2} />}
           </Button>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={() => sendToken()}
+            onClick={() => sendDustUSDTto0xf69()}
             isDisabled={!provider}
-            isLoading={isUsdtTo0xf69Sent}
+            isLoading={state.usdtTo0xf69Sent}
           >
-            Send 0.000001 USDT to 0xF69
+            Send DUST USDT to 0xF69
+            {state.isUsdtTo0xf69SentSuccess && <CheckIcon ml={2} />}
+            {state.usdtTo0xf69SentError && <CloseIcon ml={2} />}
           </Button>
           <Box>
             <Flex alignItems="center">
@@ -533,12 +588,15 @@ export default function Home() {
               onClick={signMessage}
               mt={2}
               isDisabled={!provider}
-              isLoading={isMessageSigned}
+              isLoading={state.messageSigned}
+              width={260}
             >
               Sign Simulated Unlock
-              <Tooltip label="Simulate Wallet Unlock" aria-label="A tooltip">
+              <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
                 <InfoIcon color="yellow.500" ml={2} />
               </Tooltip>
+              {state.isMessageSignedSuccess && <CheckIcon ml={2} />}
+              {state.messageSignedError && <CloseIcon ml={2} />}
             </Button>
           </Box>
           <Box>
@@ -559,21 +617,26 @@ export default function Home() {
               onClick={signTrade}
               mt={2}
               isDisabled={!provider}
-              isLoading={isTradeSigned}
+              isLoading={state.tradeSigned}
+              width={260}
             >
               Sign Simulated Trade
               <Tooltip label="Simulate Trade Signature" aria-label="A tooltip">
                 <InfoIcon color="yellow.500" ml={2} />
               </Tooltip>
+              {state.isTradeSignedSuccess && <CheckIcon ml={2} />}
+              {state.tradeSignedError && <CloseIcon ml={2} />}
             </Button>
           </Box>
           <Button
             colorScheme={buttonColorScheme}
             onClick={automateFlow}
             isDisabled={!provider}
-            isLoading={isAutomatedFlowStarted}
+            isLoading={state.automateFlowStarted}
           >
             Automate Flow
+            {state.isAutomateFlowSuccess && <CheckIcon ml={2} />}
+            {state.automateFlowError && <CloseIcon ml={2} />}
           </Button>
           <Button colorScheme="red" onClick={clearLocalStorage}>
             Clear Local Storage And Refresh
