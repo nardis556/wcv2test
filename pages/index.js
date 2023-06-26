@@ -134,13 +134,14 @@ export default function Home() {
       name,
       "----------START----------\n"
     );
-    console.log(`${mode} for ${name}`);
-    console.log("Transaction params:");
-    console.log(params);
     const mode =
       method === "eth_sendTransaction"
         ? "Sending Transaction"
         : "Signing Message";
+    console.log(`${mode} for ${name}`);
+    console.log("Transaction params:");
+    console.log(params);
+
     if (method === "eth_sendTransaction") {
       params.chainId = 137;
       params.type = 2;
