@@ -208,12 +208,15 @@ export default function Home() {
     //   params.chainId = 137;
     //   params.type = 2;
     // }
-    
+
     try {
       const tx = await provider.request({
         method: method,
         params: method === "eth_sendTransaction" ? [params] : params,
       });
+
+      console.log('REQUESTED')
+      
       console.log(
         mode === "Sending Transaction" ? "TRANSACTION SENT" : "MESSAGE SIGNED"
       );
@@ -225,13 +228,14 @@ export default function Home() {
       );
       return tx;
     } catch (e) {
-      console.log(`${mode} for ${name}`);
-      console.log("Transaction params:");
-      console.log(params);
-      console.log(
+      console.error(`${mode} for ${name}`);
+      console.error("Transaction params:");
+      console.error(params);
+      console.error(
         mode === "Sending Transaction" ? "TRANSACTION FAILED" : "MESSAGE FAILED"
       );
-      console.log(e);
+      console.log("Error Reason:")
+      console.error(e);
       console.error(
         "\n---------ERROR---------",
         name,
@@ -573,7 +577,6 @@ export default function Home() {
         [account, signatureParametersHash],
         "Simulated Trade."
       );
-
       updateState("isTradeSignedSuccess", true);
     } catch (e) {
       console.error(e);
