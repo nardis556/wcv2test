@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { InfoIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
+import { UniversalProvider } from "@walletconnect/universal-provider";
 import { ethers } from "ethers";
 
 import { defaultTrade, defaultUnlock } from "../constants/params";
@@ -28,6 +29,7 @@ import {
 
 import { ERC20_ABI } from "../utils/abi";
 import { getGasPrices } from "@/utils/transactionUtils";
+import { redirect } from "next/dist/server/api-utils";
 
 export default function Home() {
   const [state, setState] = useState({
@@ -79,20 +81,65 @@ export default function Home() {
     console.log("Connecting wallet...");
     updateState("walletConnecting", true);
     try {
-      const provider = await EthereumProvider.init({
-        projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-        chains: [137],
-        showQrModal: true,
-        rpcMap: {
-          137: "https://polygon-rpc.com",
-        },
-        metadata: {
-          name: "wcv2test",
-          description: "WalletConnect v2 Test",
-          url: "https://wc2-test.lars.vodka/",
-          icons: ["https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000"]
+      const initEtheruemProvider = async () => {
+        try {
+          const provider = await EthereumProvider.init({
+            projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
+            chains: [137],
+            showQrModal: true,
+            rpcMap: {
+              137: "https://polygon-rpc.com",
+            },
+            metadata: {
+              name: "wcv2test",
+              description: "WalletConnect v2 Test",
+              url: "https://wc2-test.lars.vodka/",
+              icons: [
+                "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
+              ],
+            },
+          });
+          return provider;
+        } catch (e) {
+          console.log(e);
+          return e;
         }
-      });
+      };
+
+      const initUniversalProvider = async () => {
+        try {
+          const provider = await UniversalProvider.init({
+            logger: "info",
+            relayUrl: `https://relay.walletconnect.com/?projectId=${NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID}`,
+            projectId: NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
+            metadata: {
+              name: "wcv2test",
+              description: "WalletConnect v2 Test",
+              url: "https://wc2-test.lars.vodka/",
+              icons: [
+                "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
+              ],
+            },
+            client: undefined,
+          });
+          await provider.connect({
+            namespaces: {
+              eip155: {
+                methods: ["eth_sendTransaction", "personal_sign"],
+                chains: [137],
+                rpcMap: {
+                  137: "https://polygon-rpc.com",
+                },
+              },
+            },
+          });
+          return provider;
+        } catch (e) {
+          return e;
+        }
+      };
+
+      const provider = await initEtheruemProvider();
 
       await provider.enable();
 
@@ -102,11 +149,11 @@ export default function Home() {
 
       console.log("Wallet connected:", account);
 
-      console.log('Provider details')
-      console.log(provider)
+      console.log("Provider details");
+      console.log(provider);
 
-      console.log('ChainId:')
-      console.log(await provider.request({ method: 'eth_chainId' }))
+      console.log("ChainId:");
+      console.log(await provider.request({ method: "eth_chainId" }));
 
       setProvider(provider);
       setWeb3Provider(web3Provider);
@@ -132,7 +179,7 @@ export default function Home() {
       });
     } catch (e) {
       console.log(e);
-      alert("Wallet Connection Failed. Restarting App...")
+      alert("Wallet Connection Failed. Restarting App...");
       setTimeout(() => {
         clearLocalStorage();
       }, 5000);
@@ -157,10 +204,11 @@ export default function Home() {
     console.log("Transaction params:");
     console.log(params);
 
-    if (method === "eth_sendTransaction") {
-      // params.chainId = 137;
-      // params.type = 2;
-    }
+    // if (method === "eth_sendTransaction") {
+    //   params.chainId = 137;
+    //   params.type = 2;
+    // }
+    
     try {
       const tx = await provider.request({
         method: method,
@@ -303,8 +351,8 @@ export default function Home() {
          */
         gasLimit: ethers.utils.hexlify(21000),
         gasPrice: ethers.utils.hexlify(maxFee),
-        chainId: 137,
-        type: 0
+        // chainId: 137,
+        // type: 0,
       };
 
       await submitTx("eth_sendTransaction", transaction, "0 MATIC to self");
@@ -348,9 +396,9 @@ export default function Home() {
          */
         gasPrice: ethers.utils.hexlify(maxFee),
         gasLimit: ethers.utils.hexlify(21000),
-        chainId: 137,
         value: "0x00",
-        type: 0
+        // chainId: 137,
+        // type: 0,
       };
       await submitTx("eth_sendTransaction", transaction, "DUST MATIC to 0xF69");
       updateState("isMaticTo0xf69SentSuccess", true);
@@ -404,9 +452,9 @@ export default function Home() {
          */
         gasPrice: ethers.utils.hexlify(maxFee),
         gasLimit: ethers.utils.hexlify(100000),
-        chainId: 137,
         value: "0x00",
-        type: 0
+        // chainId: 137,
+        // type: 0,
       };
       await submitTx("eth_sendTransaction", transaction, "DUST USDT to 0xF69");
       updateState("isUsdtTo0xf69SentSuccess", true);
@@ -552,14 +600,6 @@ export default function Home() {
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Heading my={4} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
-          <Tooltip label="View Source">
-            <IconButton
-              as="a"
-              href="https://github.com/nardis556/wcv2test"
-              aria-label="GitHub"
-              icon={<FaGithub />}
-            />
-          </Tooltip>
         </Heading>
         <Button onClick={toggleColorMode} width={100}>
           {colorMode === "light" ? "Dark" : "Light"}
