@@ -215,8 +215,8 @@ export default function Home() {
         params: method === "eth_sendTransaction" ? [params] : params,
       });
 
-      console.log('REQUESTED')
-      
+      console.log("REQUESTED");
+
       console.log(
         mode === "Sending Transaction" ? "TRANSACTION SENT" : "MESSAGE SIGNED"
       );
@@ -234,7 +234,7 @@ export default function Home() {
       console.error(
         mode === "Sending Transaction" ? "TRANSACTION FAILED" : "MESSAGE FAILED"
       );
-      console.log("Error Reason:")
+      console.log("Error Reason:");
       console.error(e);
       console.error(
         "\n---------ERROR---------",
@@ -603,6 +603,14 @@ export default function Home() {
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Heading my={4} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
+          <Tooltip label="View Source">
+            <IconButton
+              as="a"
+              href="https://github.com/nardis556/wcv2test"
+              aria-label="GitHub"
+              icon={<FaGithub />}
+            />
+          </Tooltip>
         </Heading>
         <Button onClick={toggleColorMode} width={100}>
           {colorMode === "light" ? "Dark" : "Light"}
