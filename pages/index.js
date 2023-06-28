@@ -72,7 +72,7 @@ export default function Home() {
   const [account, setAccount] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
   const [unlock, setUnlock] = useState(defaultUnlock);
-  const [customTransactionParams, setCustomTransactionParams] = useState(null);
+  const [customTransactionParams, setCustomTransactionParams] = useState("Generate or change me");
   const [provider, setProvider] = useState(null);
   const [web3Provider, setWeb3Provider] = useState(null);
 
@@ -349,17 +349,17 @@ export default function Home() {
         /**
          * type 2, uncomment
          */
-        // gas: ethers.utils.hexlify(21000),
-        // maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-        // maxFeePerGas: ethers.utils.hexlify(maxFee),
-        // type: 2,
-        // chainId: 137
+        gasLimit: ethers.utils.hexlify(21000),
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        type: 2,
+        chainId: 137
 
         /**
          * type 0, uncomment
          */
-        gasLimit: ethers.utils.hexlify(21000),
-        gasPrice: ethers.utils.hexlify(maxFee),
+        // gasLimit: ethers.utils.hexlify(21000),
+        // gasPrice: ethers.utils.hexlify(maxFee),
         // chainId: 137,
         // type: 0,
       };
@@ -451,18 +451,18 @@ export default function Home() {
         /**
          * type 2 uncomment
          */
-        // maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-        // maxFeePerGas: ethers.utils.hexlify(maxFee),
-        // gas: ethers.utils.hexlify(21000),
-        // chainId: 137,
-        // type: 2,
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        gasLimit: ethers.utils.hexlify(21000),
+        chainId: 137,
+        type: 2,
 
         /**
          * type 0 uncomment
          */
-        gasPrice: ethers.utils.hexlify(maxFee),
-        gasLimit: ethers.utils.hexlify(21000),
-        value: "0x00",
+        // gasPrice: ethers.utils.hexlify(maxFee),
+        // gasLimit: ethers.utils.hexlify(21000),
+        // value: "0x00",
         // chainId: 137,
         // type: 0,
       };
@@ -507,18 +507,18 @@ export default function Home() {
         /**
          * type 2 uncomment
          */
-        // maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
-        // maxFeePerGas: ethers.utils.hexlify(maxFee),
-        // gas: ethers.utils.hexlify(100000),
-        // chainId: 137,
-        // type: 2,
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        gasLimit: ethers.utils.hexlify(100000),
+        chainId: 137,
+        type: 2,
 
         /**
          * type 0 uncomment
          */
-        gasPrice: ethers.utils.hexlify(maxFee),
-        gasLimit: ethers.utils.hexlify(100000),
-        value: "0x00",
+        // gasPrice: ethers.utils.hexlify(maxFee),
+        // gasLimit: ethers.utils.hexlify(100000),
+        // value: "0x00",
         // chainId: 137,
         // type: 0,
       };
