@@ -51,6 +51,10 @@ export default function Home() {
     messageSignedError: false,
     isMessageSignedSuccess: false,
 
+    customSigned: false,
+    customSignedError: false,
+    isCustomSignedSuccess: false,
+
     tradeSigned: false,
     tradeSignedError: false,
     isTradeSignedSuccess: false,
@@ -68,6 +72,7 @@ export default function Home() {
   const [account, setAccount] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
   const [unlock, setUnlock] = useState(defaultUnlock);
+  const [customTransactionParams, setCustomTransactionParams] = useState(null);
   const [provider, setProvider] = useState(null);
   const [web3Provider, setWeb3Provider] = useState(null);
 
@@ -88,7 +93,7 @@ export default function Home() {
             chains: [137],
             showQrModal: true,
             rpcMap: {
-              137: "https://polygon-rpc.com",
+              137: "https://polygon-rpc.com/",
             },
             metadata: {
               name: "wcv2test",
@@ -374,6 +379,63 @@ export default function Home() {
     }
   }
 
+  async function sendType0MaticSelf(nonce) {
+    const { maxFee, maxPriorityFee } = await getGasPrices();
+
+    let transaction = {
+      from: account,
+      to: account,
+      value: ethers.utils.hexlify(0),
+      nonce: nonce ? nonce : await getNonce(),
+      data: "0x",
+      gasLimit: ethers.utils.hexlify(21000),
+      gasPrice: ethers.utils.hexlify(maxFee),
+      chainId: 137,
+      type: 0,
+    };
+
+    return transaction;
+  }
+
+  async function sendType2MaticSelf(nonce) {
+    const { maxFee, maxPriorityFee } = await getGasPrices();
+
+    let transaction = {
+      from: account,
+      to: account,
+      value: ethers.utils.hexlify(0),
+      nonce: nonce ? nonce : await getNonce(),
+      data: "0x",
+      gasLimit: ethers.utils.hexlify(21000),
+      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+      maxFeePerGas: ethers.utils.hexlify(maxFee),
+      chainId: 137,
+      type: 2,
+    };
+
+    return transaction;
+  }
+
+  async function customTransaction() {
+    updateState("customSigned", true);
+    try {
+      let transaction = JSON.parse(customTransactionParams);
+
+      await submitTx("eth_sendTransaction", transaction, "0 MATIC to self");
+      updateState("isCustomSignedSuccess", true);
+    } catch (e) {
+      console.error(e);
+      updateState("customSignedError", true);
+      throw new Error(e);
+    } finally {
+      updateState("customSigned", false);
+      setTimeout(() => {
+        updateState("isCustomSignedSuccess", false);
+        updateState("customSignedError", false);
+      }, 5000);
+    }
+  }
+
   async function sendDustMatic0xf69(nonce) {
     updateState("maticTo0xf69Sent", true);
     try {
@@ -600,7 +662,7 @@ export default function Home() {
   return (
     <Container maxW="container.md">
       <ColorModeScript initialColorMode="dark" />
-      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+      <Flex justifyContent="space-between" alignItems="center" mb={1}>
         <Heading my={4} size="md">
           WalletConnect v2 Test (POLYGON MAINNET)
           <Tooltip label="View Source">
@@ -717,7 +779,7 @@ export default function Home() {
                 isDisabled={!provider}
                 bg={inputColor}
                 color={textColor}
-                height={120}
+                height={100}
                 fontSize={11}
               />
             </Flex>
@@ -735,6 +797,65 @@ export default function Home() {
               </Tooltip>
               {state.isTradeSignedSuccess && <CheckIcon ml={2} />}
               {state.tradeSignedError && <CloseIcon ml={2} />}
+            </Button>
+          </Box>
+          <Box>
+            <Flex alignItems="center">
+              <Textarea
+                placeholder="Enter transaction data in JSON or use buttons to generate type 0 or type 2 self transactions."
+                value={customTransactionParams}
+                isDisabled={!provider}
+                bg={inputColor}
+                color={textColor}
+                height={165}
+                fontSize={11}
+              />
+            </Flex>
+            <Button
+              colorScheme={buttonColorScheme}
+              onClick={customTransaction}
+              mt={2}
+              isDisabled={!provider || !customTransactionParams}
+              isLoading={state.customSigned}
+              width={260}
+              marginEnd={2}
+            >
+              Submit Transaction
+              <Tooltip
+                label="Generate a transaction type first."
+                aria-label="A tooltip"
+              >
+                <InfoIcon color="yellow.500" ml={2} />
+              </Tooltip>
+              {state.isCustomSignedSuccess && <CheckIcon ml={2} />}
+              {state.customSignedError && <CloseIcon ml={2} />}
+            </Button>
+            <Button
+              colorScheme={buttonColorScheme}
+              onClick={async () => {
+                const tx = await sendType0MaticSelf();
+                setCustomTransactionParams(JSON.stringify(tx, null, 2));
+              }}
+              mt={2}
+              isDisabled={!provider}
+              isLoading={state.customSigned}
+              width={150}
+            >
+              Generate Type 0
+            </Button>
+            <Button
+              colorScheme={buttonColorScheme}
+              onClick={async () => {
+                const tx = await sendType2MaticSelf();
+                setCustomTransactionParams(JSON.stringify(tx, null, 2));
+              }}
+              mt={2}
+              isDisabled={!provider}
+              isLoading={state.customSigned}
+              width={150}
+              marginX={2}
+            >
+              Generate Type 2
             </Button>
           </Box>
           <Button
