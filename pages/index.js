@@ -421,7 +421,7 @@ export default function Home() {
     try {
       let transaction = JSON.parse(customTransactionParams);
 
-      await submitTx("eth_sendTransaction", transaction, "0 MATIC to self");
+      await submitTx("eth_sendTransaction", transaction, "CUSTOM 0 MATIC to self");
       updateState("isCustomSignedSuccess", true);
     } catch (e) {
       console.error(e);
@@ -804,6 +804,7 @@ export default function Home() {
               <Textarea
                 placeholder="Enter transaction data in JSON or use buttons to generate type 0 or type 2 self transactions."
                 value={customTransactionParams}
+                onChange={(e) => setCustomTransactionParams(e.target.value)}
                 isDisabled={!provider}
                 bg={inputColor}
                 color={textColor}
