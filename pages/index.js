@@ -17,7 +17,6 @@ import {
 } from "@chakra-ui/react";
 import { InfoIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
-import { UniversalProvider } from "@walletconnect/universal-provider";
 import { ethers } from "ethers";
 
 import { defaultTrade, defaultUnlock } from "../constants/params";
@@ -107,39 +106,6 @@ export default function Home() {
           return provider;
         } catch (e) {
           console.log(e);
-          return e;
-        }
-      };
-
-      const initUniversalProvider = async () => {
-        try {
-          const provider = await UniversalProvider.init({
-            logger: "info",
-            relayUrl: `https://relay.walletconnect.com/?projectId=${NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID}`,
-            projectId: NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-            metadata: {
-              name: "wcv2test",
-              description: "WalletConnect v2 Test",
-              url: "https://wc2-test.lars.vodka/",
-              icons: [
-                "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
-              ],
-            },
-            client: undefined,
-          });
-          await provider.connect({
-            namespaces: {
-              eip155: {
-                methods: ["eth_sendTransaction", "personal_sign"],
-                chains: [137],
-                rpcMap: {
-                  137: "https://polygon-rpc.com",
-                },
-              },
-            },
-          });
-          return provider;
-        } catch (e) {
           return e;
         }
       };
