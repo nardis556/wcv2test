@@ -15,7 +15,7 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@react-native-async-storage/async-storage": "^1.18.2",
-    "@walletconnect/ethereum-provider": "^2.8.4",
+    "@walletconnect/ethereum-provider": "^2.8.6",
     "@walletconnect/modal": "^2.5.9",
     "@walletconnect/universal-provider": "^2.8.3",
     "eslint": "8.42.0",
