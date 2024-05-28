@@ -42,9 +42,9 @@ export default function Home() {
     maticTo0xf69SentError: false,
     isMaticTo0xf69SentSuccess: false,
 
-    usdtTo0xf69Sent: false,
-    usdtTo0xf69SentError: false,
-    isUsdtTo0xf69SentSuccess: false,
+    USDTo0xf69Sent: false,
+    USDTo0xf69SentError: false,
+    isUSDTo0xf69SentSuccess: false,
 
     messageSigned: false,
     messageSignedError: false,
@@ -89,10 +89,10 @@ export default function Home() {
         try {
           const provider = await EthereumProvider.init({
             projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-            chains: [137],
+            chains: [64002],
             showQrModal: true,
             rpcMap: {
-              137: "https://polygon-rpc.com/",
+              64002: "https://xchain-testnet-rpc.idex.io/",
             },
             metadata: {
               name: "wcv2test",
@@ -249,9 +249,9 @@ export default function Home() {
       await sendDustMatic0xf69(nonce);
       await sleep(sleepIncrement);
 
-      console.log("Automated flow: sending DUST USDT to 0xF69");
+      console.log("Automated flow: sending DUST USD to 0xF69");
       nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
-      await sendDustUSDTto0xf69(nonce);
+      await sendDustUSDto0xf69(nonce);
       await sleep(sleepIncrement);
 
       console.log("Automated flow: Signing Simulated Trade.");
@@ -417,10 +417,10 @@ export default function Home() {
     }
   }
 
-  async function sendDustUSDTto0xf69(nonce) {
-    updateState("usdtTo0xf69Sent", true);
+  async function sendDustUSDto0xf69(nonce) {
+    updateState("USDTo0xf69Sent", true);
     try {
-      const tokenContractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
+      const tokenContractAddress = "0xf3dc8612bf5c62172ed882d2fe7b0ab84e9fd003";
       const tokenContract = new ethers.Contract(
         tokenContractAddress,
         ERC20_ABI,
@@ -445,17 +445,17 @@ export default function Home() {
         chainId: 137,
         type: 2,
       };
-      await submitTx("eth_sendTransaction", transaction, "DUST USDT to 0xF69");
-      updateState("isUsdtTo0xf69SentSuccess", true);
+      await submitTx("eth_sendTransaction", transaction, "DUST USD to 0xF69");
+      updateState("isUSDTo0xf69SentSuccess", true);
     } catch (e) {
       console.error(e);
-      updateState("usdtTo0xf69SentError", true);
+      updateState("USDTo0xf69SentError", true);
       throw new Error(e);
     } finally {
-      updateState("usdtTo0xf69Sent", false);
+      updateState("USDTo0xf69Sent", false);
       setTimeout(() => {
-        updateState("isUsdtTo0xf69SentSuccess", false);
-        updateState("usdtTo0xf69SentError", false);
+        updateState("isUSDTo0xf69SentSuccess", false);
+        updateState("USDTo0xf69SentError", false);
       }, 5000);
     }
   }
@@ -655,13 +655,13 @@ export default function Home() {
           </Button>
           <Button
             colorScheme={buttonColorScheme}
-            onClick={() => sendDustUSDTto0xf69()}
+            onClick={() => sendDustUSDto0xf69()}
             isDisabled={!provider}
-            isLoading={state.usdtTo0xf69Sent}
+            isLoading={state.USDTo0xf69Sent}
           >
-            Send DUST USDT to 0xF69
-            {state.isUsdtTo0xf69SentSuccess && <CheckIcon ml={2} />}
-            {state.usdtTo0xf69SentError && <CloseIcon ml={2} />}
+            Send DUST USD to 0xF69
+            {state.isUSDTo0xf69SentSuccess && <CheckIcon ml={2} />}
+            {state.USDTo0xf69SentError && <CloseIcon ml={2} />}
           </Button>
           <Box>
             <Flex alignItems="center">
