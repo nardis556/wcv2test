@@ -157,7 +157,7 @@ export default function Home() {
               ? {
                   name: nativeAssetSymbol,
                   symbol: nativeAssetSymbol,
-                  decimals: NATIVE_ASSET_DECIMALS,
+                  decimals: 18,
                 }
               : undefined,
             blockExplorerUrls: [blockExplorerUrl],
