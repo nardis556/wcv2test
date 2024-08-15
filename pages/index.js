@@ -145,7 +145,6 @@ export default function Home() {
         chainRpc,
         nativeAssetSymbol,
         blockExplorerUrl,
-        NATIVE_ASSET_DECIMALS
       }) => ({
         method: "wallet_addEthereumChain",
         params: [
@@ -158,7 +157,7 @@ export default function Home() {
               ? {
                   name: nativeAssetSymbol,
                   symbol: nativeAssetSymbol,
-                  decimals: NATIVE_ASSET_DECIMALS,
+                  decimals: 18,
                 }
               : undefined,
             blockExplorerUrls: [blockExplorerUrl],
@@ -176,7 +175,6 @@ export default function Home() {
           nativeAssetSymbol: "ETH",
           blockExplorerUrl: "https://xchain-testnet-explorer.idex.io/",
           provider,
-          NATIVE_ASSET_DECIMALS: 18,
         });
       }
 
