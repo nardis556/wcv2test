@@ -114,9 +114,9 @@ export default function Home() {
 
       await provider.enable();
 
-      const web3Provider = new ethers.BrowserProvider(provider);
+      const web3Provider = new ethers.providers.Web3Provider(provider);
       const signer = web3Provider.getSigner();
-      const account = await (await signer).getAddress();
+      const account = await signer.getAddress();
 
       console.log("Wallet connected:", account);
 
@@ -215,7 +215,7 @@ export default function Home() {
     let nonce;
     try {
       nonce = await web3Provider.getTransactionCount(account, "pending");
-      return ethers.hexlify(nonce);
+      return ethers.utils.hexlify(nonce);
     } catch (e) {
       console.error(e);
       return e;
@@ -245,12 +245,12 @@ export default function Home() {
       await sleep(sleepIncrement);
 
       console.log("Automated flow: sending DUST MATIC to 0xF69");
-      nonce = ethers.hexlify(ethers.BigNumber.from(nonce).add(1));
+      nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
       await sendDustMatic0xf69(nonce);
       await sleep(sleepIncrement);
 
       console.log("Automated flow: sending DUST USD to 0xF69");
-      nonce = ethers.hexlify(ethers.BigNumber.from(nonce).add(1));
+      nonce = ethers.utils.hexlify(ethers.BigNumber.from(nonce).add(1));
       await sendDustUSDto0xf69(nonce);
       await sleep(sleepIncrement);
 
@@ -303,12 +303,12 @@ export default function Home() {
       let transaction = {
         from: account,
         to: account,
-        value: ethers.hexlify(0),
+        value: ethers.utils.hexlify(0),
         nonce: nonce ? nonce : await getNonce(),
         data: "0x",
-        gasLimit: ethers.hexlify(21000),
-        maxPriorityFeePerGas: ethers.hexlify(maxPriorityFee),
-        maxFeePerGas: ethers.hexlify(maxFee),
+        gasLimit: ethers.utils.hexlify(21000),
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
         type: 2,
         chainId: 137
       };
@@ -337,8 +337,8 @@ export default function Home() {
       value: ethers.utils.hexlify(0),
       nonce: nonce ? nonce : await getNonce(),
       data: "0x",
-      gasLimit: ethers.hexlify(21000),
-      gasPrice: ethers.hexlify(maxFee),
+      gasLimit: ethers.utils.hexlify(21000),
+      gasPrice: ethers.utils.hexlify(maxFee),
       chainId: 137,
       type: 0,
     };
@@ -355,9 +355,9 @@ export default function Home() {
       value: ethers.utils.hexlify(0),
       nonce: nonce ? nonce : await getNonce(),
       data: "0x",
-      gasLimit: ethers.hexlify(21000),
-      maxPriorityFeePerGas: ethers.hexlify(maxPriorityFee),
-      maxFeePerGas: ethers.hexlify(maxFee),
+      gasLimit: ethers.utils.hexlify(21000),
+      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+      maxFeePerGas: ethers.utils.hexlify(maxFee),
       chainId: 137,
       type: 2,
     };
@@ -389,16 +389,16 @@ export default function Home() {
     updateState("maticTo0xf69Sent", true);
     try {
       const { maxFee, maxPriorityFee } = await getGasPrices();
-      const amountInWei = ethers.parseUnits("0.000001", "ether");
+      const amountInWei = ethers.utils.parseUnits("0.000001", "ether");
       let transaction = {
         from: account,
         to: "0xF691C438628B188e9F58Cd88D75B9c6AC22f3f2b",
-        value: ethers.hexlify(amountInWei),
+        value: ethers.utils.hexlify(amountInWei),
         nonce: nonce ? nonce : await getNonce(),
         data: "0x",
-        maxPriorityFeePerGas: ethers.hexlify(maxPriorityFee),
-        maxFeePerGas: ethers.hexlify(maxFee),
-        gasLimit: ethers.hexlify(21000),
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        gasLimit: ethers.utils.hexlify(21000),
         chainId: 137,
         type: 2,
       };
@@ -427,7 +427,7 @@ export default function Home() {
         web3Provider.getSigner()
       );
       const decimals = await tokenContract.decimals();
-      const amountInTokenUnits = ethers.parseUnits("0.000001", decimals);
+      const amountInTokenUnits = ethers.utils.parseUnits("0.000001", decimals);
 
       const { maxFee, maxPriorityFee } = await getGasPrices();
 
@@ -439,9 +439,9 @@ export default function Home() {
           amountInTokenUnits,
         ]),
         nonce: nonce ? nonce : await getNonce(),
-        maxPriorityFeePerGas: ethers.hexlify(maxPriorityFee),
-        maxFeePerGas: ethers.hexlify(maxFee),
-        gasLimit: ethers.hexlify(100000),
+        maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFee),
+        maxFeePerGas: ethers.utils.hexlify(maxFee),
+        gasLimit: ethers.utils.hexlify(100000),
         chainId: 137,
         type: 2,
       };
@@ -464,7 +464,7 @@ export default function Home() {
     updateState("messageSigned", true);
     try {
       const params = [
-        ethers.hexlify(ethers.toUtf8Bytes(defaultUnlock)),
+        ethers.utils.hexlify(ethers.utils.toUtf8Bytes(defaultUnlock)),
         account,
       ];
       await submitTx("personal_sign", params, "Simulated Unlock.");
@@ -488,7 +488,7 @@ export default function Home() {
         console.error("Invalid orderParams");
         return null;
       }
-      const nonceAsByteArray = ethers.arrayify(
+      const nonceAsByteArray = ethers.utils.arrayify(
         `0x${orderParams.nonce.replace(/-/g, "")}`
       );
       return [
@@ -517,7 +517,7 @@ export default function Home() {
     try {
       let fields = signatureParameters.map((param) => param[0]);
       let values = signatureParameters.map((param) => param[1]);
-      return ethers.solidityPackedSha256(fields, values);
+      return ethers.utils.solidityKeccak256(fields, values);
     } catch (e) {
       console.error(e);
       return e;
