@@ -71,9 +71,7 @@ export default function Home() {
   const [account, setAccount] = useState("");
   const [trade, setTrade] = useState(JSON.stringify(defaultTrade, null, 2));
   const [unlock, setUnlock] = useState(defaultUnlock);
-  const [customTransactionParams, setCustomTransactionParams] = useState(
-    "Generate or change me"
-  );
+  const [customTransactionParams, setCustomTransactionParams] = useState("Generate or change me");
   const [provider, setProvider] = useState(null);
   const [web3Provider, setWeb3Provider] = useState(null);
 
@@ -95,7 +93,7 @@ export default function Home() {
             showQrModal: true,
             rpcMap: {
               64002: "https://xchain-testnet-rpc.idex.io/",
-              1: "https://eth.llamarpc.com",
+              1: "https://eth.llamarpc.com"
             },
             metadata: {
               name: "wcv2test",
@@ -106,16 +104,7 @@ export default function Home() {
               ],
             },
           });
-          if (provider.chainId !== 64002) {
-            await switchWalletConnectChain({
-              chainName: "IDEX Testnet",
-              chainId: 64002,
-              chainRpc: "https://xchain-testnet-rpc.idex.io/",
-              nativeAssetSymbol: "ETH",
-              blockExplorerUrl: "https://xchain-testnet-explorer.idex.io/",
-              provider,
-            });
-          }
+          provider.on
           return provider;
         } catch (e) {
           console.log(e);
@@ -123,56 +112,6 @@ export default function Home() {
         }
       };
 
-      const switchWalletConnectChain = async (params) => {
-        console.log(
-          "[softwareWallet] Switching WalletConnect chain to ",
-          params.chainId
-        );
-        const changeNetwork = changeNetworkRequest(params.chainId);
-        const addNetwork = addNetworkRequest(params);
-        const { provider } = params;
-        return provider?.request(changeNetwork).catch((resultSwitch) => {
-          if (
-            resultSwitch?.message?.includes(CHAIN_NOT_EXIST_ERROR_CODE) ||
-            resultSwitch?.toString().includes(CHAIN_NOT_EXIST_ERROR_CODE)
-          ) {
-            return provider.request(addNetwork).catch((resultAdd) => {
-              console.log({ resultAdd });
-            });
-          }
-        });
-      };
-
-      const changeNetworkRequest = (chainId) => ({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: ethers.toQuantity(chainId) }],
-      });
-
-      const addNetworkRequest = ({
-        chainName,
-        chainId,
-        chainRpc,
-        nativeAssetSymbol,
-        blockExplorerUrl,
-      }) => ({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: ethers.toQuantity(chainId),
-            chainName,
-            rpcUrls: [chainRpc],
-            iconUrls: [],
-            nativeCurrency: nativeAssetSymbol
-              ? {
-                  name: nativeAssetSymbol,
-                  symbol: nativeAssetSymbol,
-                  decimals: NATIVE_ASSET_DECIMALS,
-                }
-              : undefined,
-            blockExplorerUrls: [blockExplorerUrl],
-          },
-        ],
-      });
 
       const provider = await initEtheruemProvider();
 
@@ -182,7 +121,7 @@ export default function Home() {
       const signer = web3Provider.getSigner();
       const account = await (await signer).getAddress();
 
-      console.log(account);
+      console.log(account)
 
       console.log("Wallet connected:", account);
 
@@ -376,7 +315,7 @@ export default function Home() {
         maxPriorityFeePerGas: ethers.hexlify(maxPriorityFee),
         maxFeePerGas: ethers.hexlify(maxFee),
         type: 2,
-        chainId: 137,
+        chainId: 137
       };
 
       await submitTx("eth_sendTransaction", transaction, "0 MATIC to self");
@@ -436,11 +375,7 @@ export default function Home() {
     try {
       let transaction = JSON.parse(customTransactionParams);
 
-      await submitTx(
-        "eth_sendTransaction",
-        transaction,
-        "CUSTOM 0 MATIC to self"
-      );
+      await submitTx("eth_sendTransaction", transaction, "CUSTOM 0 MATIC to self");
       updateState("isCustomSignedSuccess", true);
     } catch (e) {
       console.error(e);
