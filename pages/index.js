@@ -106,7 +106,16 @@ export default function Home() {
               ],
             },
           });
-
+          if (provider.chainId !== 64002) {
+            await switchWalletConnectChain({
+              chainName: "IDEX Testnet",
+              chainId: 64002,
+              chainRpc: "https://xchain-testnet-rpc.idex.io/",
+              nativeAssetSymbol: "ETH",
+              blockExplorerUrl: "https://xchain-testnet-explorer.idex.io/",
+              provider,
+            });
+          }
           return provider;
         } catch (e) {
           console.log(e);
@@ -166,17 +175,6 @@ export default function Home() {
       });
 
       const provider = await initEtheruemProvider();
-
-      if (provider.chainId !== 64002) {
-        await switchWalletConnectChain({
-          chainName: "IDEX Testnet",
-          chainId: 64002,
-          chainRpc: "https://xchain-testnet-rpc.idex.io/",
-          nativeAssetSymbol: "ETH",
-          blockExplorerUrl: "https://xchain-testnet-explorer.idex.io/",
-          provider,
-        });
-      }
 
       await provider.enable();
 
