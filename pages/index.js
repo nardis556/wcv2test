@@ -89,11 +89,10 @@ export default function Home() {
         try {
           const provider = await EthereumProvider.init({
             projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-            chains: [64002, 1],
+            chains: [64002],
             showQrModal: true,
             rpcMap: {
               64002: "https://xchain-testnet-rpc.idex.io/",
-              1: "https://eth.llamarpc.com"
             },
             metadata: {
               name: "wcv2test",
@@ -104,14 +103,12 @@ export default function Home() {
               ],
             },
           });
-          provider.on
           return provider;
         } catch (e) {
           console.log(e);
           return e;
         }
       };
-
 
       const provider = await initEtheruemProvider();
 
@@ -120,8 +117,6 @@ export default function Home() {
       const web3Provider = new ethers.BrowserProvider(provider);
       const signer = web3Provider.getSigner();
       const account = await (await signer).getAddress();
-
-      console.log(account)
 
       console.log("Wallet connected:", account);
 
