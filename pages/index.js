@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FaGithub } from "react-icons/fa";
 import {
   Box,
@@ -16,12 +16,12 @@ import {
   IconButton,
   Select,
   useToast,
+  Image,
 } from "@chakra-ui/react";
 import { InfoIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import { ethers } from "ethers";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { CHAIN_CONFIG } from "../config";
-
 import { defaultUnlock } from "../constants/params";
 import {
   ethersVersion,
@@ -29,7 +29,20 @@ import {
   walletconnectEthereumProviderVersion,
 } from "../constants/packages";
 
+const sanitizeChainId = (chainId) =>
+  typeof chainId === "string" ? parseInt(chainId, 10) : Number(chainId);
+
+const showToast = (toast, title, description, status) => {
+  toast({ title, description, status, duration: 3000, isClosable: true });
+};
+
+const showSuccessToast = (toast, title, description) =>
+  showToast(toast, title, description, "success");
+const showErrorToast = (toast, title, description) =>
+  showToast(toast, title, description, "error");
+
 export default function Home() {
+  // State declarations
   const [state, setState] = useState({
     walletConnecting: false,
     selfETHSent: false,
@@ -39,331 +52,344 @@ export default function Home() {
     messageSignedError: false,
     isMessageSignedSuccess: false,
   });
-
-  const updateState = (key, value) => {
-    setState((prevState) => ({ ...prevState, [key]: value }));
-  };
-
-  const { colorMode, toggleColorMode } = useColorMode();
   const [account, setAccount] = useState("");
   const [unlock, setUnlock] = useState(defaultUnlock);
   const [provider, setProvider] = useState(null);
-  const [web3Provider, setWeb3Provider] = useState(null);
+  const [browserProvider, setBrowserProvider] = useState(null);
   const [availableProviders, setAvailableProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [currentChain, setCurrentChain] = useState(null);
+  const [walletIcon, setWalletIcon] = useState(null);
 
+  // Hooks
+  const { colorMode, toggleColorMode } = useColorMode();
   const toast = useToast();
 
+  // UI color modes
   const backgroundColor = useColorModeValue("white", "#181818");
   const textColor = useColorModeValue("black", "white");
   const buttonColorScheme = useColorModeValue("blue", "teal");
   const inputColor = useColorModeValue("gray.200", "gray.800");
   const borderColor = useColorModeValue("gray.300", "gray.600");
 
+  // Helper functions
+  const updateState = (key, value) =>
+    setState((prev) => ({ ...prev, [key]: value }));
+
   const initializeProvider = useCallback(async () => {
-    if (provider) {
-      const web3Provider = new ethers.providers.Web3Provider(provider, "any");
-      const network = await web3Provider.getNetwork();
-      setWeb3Provider(web3Provider);
-      setCurrentChain(network.chainId);
-      return web3Provider;
-    }
-    return null;
+    if (!provider) return null;
+    const newBrowserProvider = new ethers.BrowserProvider(provider);
+    const network = await newBrowserProvider.getNetwork();
+    console.log("Initialize provider network:", network);
+    setBrowserProvider(newBrowserProvider);
+    setCurrentChain(sanitizeChainId(network.chainId));
+    return newBrowserProvider;
   }, [provider]);
 
-  useEffect(() => {
-    window.addEventListener("eip6963:announceProvider", handleAnnounceProvider);
-    window.dispatchEvent(new Event("eip6963:requestProvider"));
-
-    return () => {
-      window.removeEventListener(
-        "eip6963:announceProvider",
-        handleAnnounceProvider
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    if (provider) {
-      initializeProvider();
-    }
-  }, [provider, initializeProvider]);
-
+  // EIP-6963 handler
   const handleAnnounceProvider = (event) => {
     const { info, provider } = event.detail;
     setAvailableProviders((prev) => {
-      const exists = prev.some((p) => p.info.uuid === info.uuid);
-      if (!exists) {
-        return [...prev, { info, provider }];
-      }
-      return prev;
+      return prev.some((p) => p.info.uuid === info.uuid)
+        ? prev
+        : [...prev, { info, provider }];
     });
   };
 
-  const connectWallet = async (selectedProvider) => {
-    console.log("Connecting wallet...");
-    updateState("walletConnecting", true);
+  const validateCurrentNetwork = async (targetChainId) => {
+    try {
+      const currentChainId = await fetchCurrentChainId();
+      const targetChainIdSanitized = sanitizeChainId(targetChainId);
+      
+      console.log(
+        `Current chainId: ${currentChainId}, Target chainId: ${targetChainIdSanitized}`
+      );
+  
+      const isValid = currentChainId === targetChainIdSanitized;
+      console.log(`Network validation result: ${isValid}`);
+      return isValid;
+    } catch (error) {
+      console.error("Error validating current network:", error);
+      return false;
+    }
+  };
+
+  // Wallet connection functions
+  const connectEIP6963Wallet = async (selectedProvider) => {
     try {
       await selectedProvider.provider.request({
         method: "eth_requestAccounts",
       });
-      const web3Provider = new ethers.providers.Web3Provider(
+      const newBrowserProvider = new ethers.BrowserProvider(
         selectedProvider.provider
       );
-      const signer = web3Provider.getSigner();
+      const signer = await newBrowserProvider.getSigner();
       const account = await signer.getAddress();
-      const chainId = await web3Provider
-        .getNetwork()
-        .then((network) => network.chainId);
-
-      console.log("Wallet connected:", account);
-      console.log("Current chain ID:", chainId);
+      const network = await newBrowserProvider.getNetwork();
+      const chainId = sanitizeChainId(network.chainId);
 
       setProvider(selectedProvider.provider);
-      setWeb3Provider(web3Provider);
+      setBrowserProvider(newBrowserProvider);
       setAccount(account);
       setSelectedProvider(selectedProvider);
       setCurrentChain(chainId);
-      updateState("walletConnecting", false);
+      setWalletIcon(selectedProvider.info.icon);
 
       selectedProvider.provider.on("accountsChanged", handleAccountsChanged);
       selectedProvider.provider.on("chainChanged", handleChainChanged);
 
-      toast({
-        title: "Wallet Connected",
-        description: `Connected to account ${account.substring(
-          0,
-          6
-        )}...${account.substring(38)}`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (e) {
-      console.error(e);
-      toast({
-        title: "Connection Failed",
-        description: "Failed to connect wallet. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      updateState("walletConnecting", false);
+      showSuccessToast(
+        toast,
+        "Wallet Connected",
+        `Connected to account ${account.substring(0, 6)}...${account.substring(
+          38
+        )}`
+      );
+    } catch (error) {
+      console.error("EIP-6963 wallet connection failed:", error);
+      showErrorToast(
+        toast,
+        "Connection Failed",
+        "Failed to connect EIP-6963 wallet. Please try again."
+      );
     }
   };
 
-  const connectWalletConnect = async () => {
+  const initializeWalletConnect = async () => {
     try {
       const wcProvider = await EthereumProvider.init({
         projectId: "dbe9fe1215dbe847681ac3dc99af6226",
         chains: [94524], // xchain
         showQrModal: true,
       });
-  
-      await wcProvider.enable();
-      const web3Provider = new ethers.providers.Web3Provider(wcProvider);
-      const signer = web3Provider.getSigner();
-      const account = await signer.getAddress();
-  
-      setProvider(wcProvider);
-      setWeb3Provider(web3Provider);
-      setAccount(account);
-      setCurrentChain(
-        await web3Provider.getNetwork().then((network) => network.chainId)
+      
+      // Ensure the provider is connected before returning
+      if (!wcProvider.connected) {
+        await wcProvider.connect();
+      }
+      
+      return wcProvider;
+    } catch (error) {
+      console.error("WalletConnect initialization failed:", error);
+      showErrorToast(
+        toast,
+        "WalletConnect Initialization Failed",
+        "Unable to initialize WalletConnect."
       );
-  
+      throw error;
+    }
+  };
+
+  const connectWalletConnect = async () => {
+    try {
+      const wcProvider = await initializeWalletConnect();
+      const newBrowserProvider = new ethers.BrowserProvider(wcProvider);
+      const signer = await newBrowserProvider.getSigner();
+      const account = await signer.getAddress();
+      const network = await newBrowserProvider.getNetwork();
+
+      setProvider(wcProvider);
+      setBrowserProvider(newBrowserProvider);
+      setAccount(account);
+      setCurrentChain(sanitizeChainId(network.chainId));
+
       wcProvider.on("accountsChanged", handleAccountsChanged);
       wcProvider.on("chainChanged", handleChainChanged);
-  
-      toast({
-        title: "WalletConnect Connected",
-        description: `Connected to account ${account.substring(
-          0,
-          6
-        )}...${account.substring(38)}`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+
+      showSuccessToast(
+        toast,
+        "WalletConnect Connected",
+        `Connected to account ${account.substring(0, 6)}...${account.substring(
+          38
+        )}`
+      );
     } catch (error) {
-      console.error("WalletConnect initialization failed", error);
-      toast({
-        title: "Connection Failed",
-        description: "Failed to initialize WalletConnect. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error("WalletConnect connection failed:", error);
+      showErrorToast(
+        toast,
+        "WalletConnect Failed",
+        "Failed to connect with WalletConnect. Please try again."
+      );
     }
   };
-  
+
+  // Event handlers
   const handleAccountsChanged = (accounts) => {
-    try {
-      if (accounts.length === 0) {
-        disconnectWallet();
-      } else {
-        setAccount(accounts[0]);
-      }
-    } catch (error) {
-      console.error("Error handling accounts changed:", error);
-    }
+    accounts.length === 0 ? disconnectWallet() : setAccount(accounts[0]);
   };
-  
-  const handleChainChanged = (chainId) => {
-    try {
-      setCurrentChain(parseInt(chainId, 16));
-      initializeProvider();
-    } catch (error) {
-      console.error("Error handling chain changed:", error);
-    }
+
+  const handleChainChanged = async (chainId) => {
+    const newChainId = sanitizeChainId(chainId);
+    setCurrentChain(newChainId);
+    
+    // Delete the current provider
+    setProvider(null);
+    setBrowserProvider(null);
+    
+    // Recreate the entire provider
+    console.log("Recreating provider due to chain change");
+    const newProvider = selectedProvider ? selectedProvider.provider : await initializeWalletConnect();
+    setProvider(newProvider);
+    
+    const newBrowserProvider = new ethers.BrowserProvider(newProvider);
+    setBrowserProvider(newBrowserProvider);
+    
+    const signer = await newBrowserProvider.getSigner();
+    const account = await signer.getAddress();
+    setAccount(account);
+    
+    const network = await newBrowserProvider.getNetwork();
+    setCurrentChain(sanitizeChainId(network.chainId));
+    
+    // Re-attach event listeners
+    newProvider.on("accountsChanged", handleAccountsChanged);
+    newProvider.on("chainChanged", handleChainChanged);
   };
-  
+
   const disconnectWallet = () => {
-    try {
-      if (provider && provider.disconnect) {
-        provider.disconnect();
-      }
-      setProvider(null);
-      setWeb3Provider(null);
-      setAccount("");
-      setSelectedProvider(null);
-      setCurrentChain(null);
-      toast({
-        title: "Wallet Disconnected",
-        status: "info",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error disconnecting wallet:", error);
-    }
+    if (provider?.disconnect) provider.disconnect();
+    setProvider(null);
+    setBrowserProvider(null);
+    setAccount("");
+    setSelectedProvider(null);
+    setCurrentChain(null);
+    setWalletIcon(null);
+    showToast(toast, "Wallet Disconnected", "", "info");
   };
-  
-  const waitForNetworkChange = async (targetChainId) => {
-    return new Promise((resolve, reject) => {
-      const checkNetwork = async () => {
-        try {
-          await provider.request({ method: "eth_chainId" });
-          const network = await web3Provider.getNetwork();
-          if (network.chainId === targetChainId) {
-            resolve();
-          } else {
-            setTimeout(checkNetwork, 1000);
-          }
-        } catch (error) {
-          console.error("Error checking network:", error);
-          reject(error); 
-          setTimeout(checkNetwork, 1000);
-        }
-      };
-      checkNetwork();
-    });
-  };
-  
+
+  // Network switching
   const switchNetwork = async (chainName) => {
-    let chainInfo;
-    try {
-      chainInfo = CHAIN_CONFIG[chainName];
-      if (!chainInfo) {
-        throw new Error(`Invalid chain name: ${chainName}`);
-      }
-    } catch (error) {
-      console.error(`Error retrieving chain information: ${error}`);
+    const chainInfo = CHAIN_CONFIG[chainName];
+    if (!chainInfo) {
+      showErrorToast(toast, "Invalid Chain", `Invalid chain name: ${chainName}`);
       return;
     }
-
-    const targetChainId = parseInt(chainInfo.chainId, 16);
-
+  
+    const chainIdNumber = sanitizeChainId(chainInfo.chainId);
+    const formattedChainId = ethers.toQuantity(chainIdNumber);
+  
+    console.log(`Attempting to switch to network: ${chainName} (${formattedChainId})`);
+  
     try {
-      await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: chainInfo.chainId }],
-      });
-    } catch (switchError) {
-      console.error(`Error switching network: ${switchError}`);
-      if (switchError.code === 4902) {
-        try {
-          await provider.request({
-            method: "wallet_addEthereumChain",
-            params: [
-              {
-                chainId: chainInfo.chainId,
-                chainName: chainInfo.chainName,
-                nativeCurrency: chainInfo.nativeCurrency,
-                rpcUrls: chainInfo.rpcUrls,
-                blockExplorerUrls: chainInfo.blockExplorerUrls,
-              },
-            ],
-          });
-
-          await provider.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: chainInfo.chainId }],
-          });
-        } catch (addError) {
-          console.error(`Failed to add ${chainInfo.chainName}: ${addError}`);
-          toast({
-            title: "Network Addition Failed",
-            description: `Failed to add ${chainInfo.chainName}. Please add it manually in your wallet.`,
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-          return;
-        }
-      } else {
-        toast({
-          title: "Network Switch Failed",
-          description: `Failed to switch to ${chainInfo.chainName}. Please switch manually in your wallet.`,
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
+      if (await validateCurrentNetwork(chainIdNumber)) {
+        console.log(`Already on the correct chain: ${chainInfo.chainName}`);
         return;
       }
-    }
 
-    try {
-      await waitForNetworkChange(targetChainId);
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: formattedChainId }],
+      });
+      console.log(`Switched to chain: ${formattedChainId}`);
+
+      console.log(`Waiting for network change to take effect...`);
+      await waitForNetworkChange(chainIdNumber);
+
+      console.log(`Re-initializing provider...`);
       await initializeProvider();
 
-      toast({
-        title: "Network Switched",
-        description: `Switched to ${chainInfo.chainName}`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (networkError) {
-      console.error(`Error after switching network: ${networkError}`);
+      console.log(`Performing final network validation...`);
+      if (!(await validateCurrentNetwork(chainIdNumber))) {
+        throw new Error("Failed to switch to the correct network");
+      }
+
+      showSuccessToast(toast, "Network Switched", `Switched to ${chainInfo.chainName}`);
+    } catch (error) {
+      console.error(`Error switching network:`, error);
+      if (error.code === 4902) {
+        try {
+          await addNetwork(chainInfo, formattedChainId);
+          showSuccessToast(toast, "Network Added", `Added and switched to ${chainInfo.chainName}`);
+        } catch (addError) {
+          showErrorToast(toast, "Network Addition Failed", `Failed to add ${chainInfo.chainName}: ${addError.message}`);
+        }
+      } else {
+        showErrorToast(toast, "Network Switch Failed", `Failed to switch to ${chainInfo.chainName}: ${error.message}`);
+      }
     }
   };
 
+  const addNetwork = async (chainInfo, formattedChainId) => {
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [{
+        chainId: formattedChainId,
+        chainName: chainInfo.chainName,
+        nativeCurrency: chainInfo.nativeCurrency,
+        rpcUrls: chainInfo.rpcUrls,
+        blockExplorerUrls: chainInfo.blockExplorerUrls
+      }]
+    });
+    console.log(`Added network: ${chainInfo.chainName}`);
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: formattedChainId }],
+    });
+    console.log(`Switched to newly added network: ${chainInfo.chainName}`);
+  };
+
+  const fetchCurrentChainId = async () => {
+    try {
+      console.log("Fetching current chain ID...");
+      if (!browserProvider) {
+        console.error("BrowserProvider is not initialized");
+        return null;
+      }
+      
+      const network = await browserProvider.getNetwork();
+      console.log(`Fetched network:`, network);
+      
+      const chainId = sanitizeChainId(network.chainId);
+      console.log(`Current chain ID: ${chainId}`);
+      return chainId;
+    } catch (error) {
+      console.error("Error fetching current chain ID:", error);
+      if (error.code === 'NETWORK_ERROR') {
+        console.log("Network is changing, retrying...");
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return fetchCurrentChainId();
+      }
+      throw error;
+    }
+  };
+
+  const waitForNetworkChange = async (targetChainId) => {
+    let retries = 0;
+    const maxRetries = 10;
+    const retryInterval = 1000; // 1 second
+    while (retries < maxRetries) {
+      console.log(`Waiting for network change, attempt ${retries + 1}/${maxRetries}`);
+      try {
+        const currentChainId = await fetchCurrentChainId();
+        if (currentChainId === targetChainId) {
+          console.log(`Network successfully changed to ${targetChainId}`);
+          return;
+        } else {
+          console.log(`Current chain (${currentChainId}) doesn't match target chain (${targetChainId}), retrying...`);
+        }
+      } catch (error) {
+        console.error(`Error during network change check:`, error);
+        // Continue to next retry instead of breaking the loop
+      }
+      await new Promise(resolve => setTimeout(resolve, retryInterval));
+      retries++;
+    }
+    throw new Error("Network change timeout");
+  };
+
+  // Wallet operations
   const signMessage = async () => {
     updateState("messageSigned", true);
     try {
-      const signer = web3Provider.getSigner();
+      const signer = await browserProvider.getSigner();
       const signature = await signer.signMessage(unlock);
       console.log("Message signed:", signature);
       updateState("isMessageSignedSuccess", true);
-      toast({
-        title: "Message Signed",
-        description: "Message signed successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (e) {
-      console.error(e);
+      showSuccessToast(toast, "Message Signed", "Message signed successfully");
+    } catch (error) {
+      console.error("Message signing failed:", error);
       updateState("messageSignedError", true);
-      toast({
-        title: "Signing Failed",
-        description: "Failed to sign message",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showErrorToast(toast, "Signing Failed", "Failed to sign message");
     } finally {
       updateState("messageSigned", false);
       setTimeout(() => {
@@ -377,71 +403,49 @@ export default function Home() {
     updateState("selfETHSent", true);
     try {
       const chainInfo = CHAIN_CONFIG[chainName];
-      if (!chainInfo) {
-        throw new Error(`Invalid chain name: ${chainName}`);
-      }
+      if (!chainInfo) throw new Error(`Invalid chain name: ${chainName}`);
 
-      const targetChainId = parseInt(chainInfo.chainId, 16);
-      if (currentChain !== targetChainId) {
-        await switchNetwork(chainName);
-      }
+      const targetChainId = sanitizeChainId(chainInfo.chainId);
+      if (currentChain !== targetChainId) await switchNetwork(chainName);
 
-      const web3Provider = await initializeProvider();
-      const signer = web3Provider.getSigner();
+      const signer = await browserProvider.getSigner();
       const address = await signer.getAddress();
-      const nonce = await web3Provider.getTransactionCount(address, "latest");
-      const gasLimit = await web3Provider.estimateGas({
+      const nonce = await browserProvider.getTransactionCount(address);
+      const gasLimit = await browserProvider.estimateGas({
         to: address,
-        value: ethers.utils.parseEther("0"),
+        value: ethers.parseEther("0"),
       });
 
       let transaction = {
         to: address,
-        value: ethers.utils.parseEther("0"),
+        value: ethers.parseEther("0"),
         nonce: nonce,
-        gasLimit: gasLimit.mul(120).div(100),
+        gasLimit: (gasLimit * BigInt(120)) / BigInt(100),
         chainId: targetChainId,
       };
 
-      if (chainName === "optimism" || chainName === "base") {
-        const gasPrice = await web3Provider.getGasPrice();
-        transaction.gasPrice = gasPrice;
-      } else {
-        const feeData = await web3Provider.getFeeData();
-        transaction.maxFeePerGas = feeData.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-        transaction.type = 2;
-      }
-
-      console.log("Sending transaction:", transaction);
+      const feeData = await browserProvider.getFeeData();
+      transaction.maxFeePerGas = feeData.maxFeePerGas;
+      transaction.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      transaction.type = 2;
 
       const tx = await signer.sendTransaction(transaction);
-      console.log(`Transaction sent on ${chainName}:`, tx.hash);
-
       const receipt = await tx.wait();
-      console.log(
-        `Transaction confirmed on ${chainName}:`,
-        receipt.transactionHash
-      );
-
+      console.log(`Transaction confirmed on ${chainName}:`, receipt.hash);
       updateState("isSelfETHSentSuccess", true);
-      toast({
-        title: "Transaction Sent",
-        description: `0 ETH sent to self on ${chainName}. Hash: ${tx.hash}`,
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
-    } catch (e) {
-      console.error(`Error sending transaction on ${chainName}:`, e);
+      showSuccessToast(
+        toast,
+        "Transaction Sent",
+        `0 ETH sent to self on ${chainName}. Hash: ${tx.hash}`
+      );
+    } catch (error) {
+      console.error(`Error sending transaction on ${chainName}:`, error);
       updateState("selfETHSentError", true);
-      toast({
-        title: "Transaction Failed",
-        description: `Failed to send 0 ETH to self on ${chainName}: ${e.message}`,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      showErrorToast(
+        toast,
+        "Transaction Failed",
+        `Failed to send 0 ETH to self on ${chainName}: ${error.message}`
+      );
     } finally {
       updateState("selfETHSent", false);
       setTimeout(() => {
@@ -451,12 +455,22 @@ export default function Home() {
     }
   };
 
-  function clearLocalStorage() {
-    console.log("Clearing local storage...");
-    localStorage.clear();
-    window.location.reload();
-  }
+  // Effects
+  useEffect(() => {
+    window.addEventListener("eip6963:announceProvider", handleAnnounceProvider);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    return () =>
+      window.removeEventListener(
+        "eip6963:announceProvider",
+        handleAnnounceProvider
+      );
+  }, []);
 
+  useEffect(() => {
+    if (provider) initializeProvider();
+  }, [provider, initializeProvider]);
+
+  // UI Component
   return (
     <Container maxW="container.md">
       <ColorModeScript initialColorMode="dark" />
@@ -486,11 +500,23 @@ export default function Home() {
         color={textColor}
         borderColor={borderColor}
       >
-        <Flex>
+        <Flex alignItems="center">
           <Heading size="md">
-            {account
-              ? `${account.substring(0, 5) + "~" + account.slice(-4)}`
-              : "No wallet connected"}
+            {account ? (
+              <Flex alignItems="center">
+                {walletIcon && (
+                  <Image
+                    src={walletIcon}
+                    alt="Wallet Icon"
+                    boxSize="24px"
+                    mr={2}
+                  />
+                )}
+                {`${account.substring(0, 5) + "~" + account.slice(-4)}`}
+              </Flex>
+            ) : (
+              "No wallet connected"
+            )}
           </Heading>
           <Spacer />
           {provider ? (
@@ -506,7 +532,7 @@ export default function Home() {
                     (p) => `${p.info.uuid}-${p.info.name}` === e.target.value
                   );
                   if (selected) {
-                    connectWallet(selected);
+                    connectEIP6963Wallet(selected);
                   }
                 }}
                 width="200px"
@@ -596,7 +622,14 @@ export default function Home() {
               </Button>
             ))}
           </Stack>
-          <Button colorScheme="red" onClick={clearLocalStorage} mt={4}>
+          <Button
+            colorScheme="red"
+            onClick={() => {
+              localStorage.clear();
+              window.location.reload();
+            }}
+            mt={4}
+          >
             Clear Local Storage And Refresh
           </Button>
         </Stack>

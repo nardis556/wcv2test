@@ -19,7 +19,7 @@
     "@walletconnect/modal": "^2.6.2",
     "eslint": "8.42.0",
     "eslint-config-next": "13.4.4",
-    "ethers": "^5.7.2",
+    "ethers": "^6.9.0",
     "framer-motion": "^10.12.16",
     "next": "13.4.4",
     "react": "18.2.0",
