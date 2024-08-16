@@ -160,22 +160,22 @@ export default function Home() {
         chains: [94524], // xchain
         showQrModal: true,
       });
-  
+
       await wcProvider.enable();
       const web3Provider = new ethers.providers.Web3Provider(wcProvider);
       const signer = web3Provider.getSigner();
       const account = await signer.getAddress();
-  
+
       setProvider(wcProvider);
       setWeb3Provider(web3Provider);
       setAccount(account);
       setCurrentChain(
         await web3Provider.getNetwork().then((network) => network.chainId)
       );
-  
+
       wcProvider.on("accountsChanged", handleAccountsChanged);
       wcProvider.on("chainChanged", handleChainChanged);
-  
+
       toast({
         title: "WalletConnect Connected",
         description: `Connected to account ${account.substring(
@@ -197,51 +197,39 @@ export default function Home() {
       });
     }
   };
-  
+
   const handleAccountsChanged = (accounts) => {
-    try {
-      if (accounts.length === 0) {
-        disconnectWallet();
-      } else {
-        setAccount(accounts[0]);
-      }
-    } catch (error) {
-      console.error("Error handling accounts changed:", error);
+    if (accounts.length === 0) {
+      disconnectWallet();
+    } else {
+      setAccount(accounts[0]);
     }
   };
-  
+
   const handleChainChanged = (chainId) => {
-    try {
-      setCurrentChain(parseInt(chainId, 16));
-      initializeProvider();
-    } catch (error) {
-      console.error("Error handling chain changed:", error);
-    }
+    setCurrentChain(parseInt(chainId, 16));
+    initializeProvider();
   };
-  
+
   const disconnectWallet = () => {
-    try {
-      if (provider && provider.disconnect) {
-        provider.disconnect();
-      }
-      setProvider(null);
-      setWeb3Provider(null);
-      setAccount("");
-      setSelectedProvider(null);
-      setCurrentChain(null);
-      toast({
-        title: "Wallet Disconnected",
-        status: "info",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error disconnecting wallet:", error);
+    if (provider && provider.disconnect) {
+      provider.disconnect();
     }
+    setProvider(null);
+    setWeb3Provider(null);
+    setAccount("");
+    setSelectedProvider(null);
+    setCurrentChain(null);
+    toast({
+      title: "Wallet Disconnected",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+    });
   };
-  
+
   const waitForNetworkChange = async (targetChainId) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const checkNetwork = async () => {
         try {
           await provider.request({ method: "eth_chainId" });
@@ -253,35 +241,27 @@ export default function Home() {
           }
         } catch (error) {
           console.error("Error checking network:", error);
-          reject(error); 
           setTimeout(checkNetwork, 1000);
         }
       };
       checkNetwork();
     });
   };
-  
+
   const switchNetwork = async (chainName) => {
-    let chainInfo;
-    try {
-      chainInfo = CHAIN_CONFIG[chainName];
-      if (!chainInfo) {
-        throw new Error(`Invalid chain name: ${chainName}`);
-      }
-    } catch (error) {
-      console.error(`Error retrieving chain information: ${error}`);
-      return;
+    const chainInfo = CHAIN_CONFIG[chainName];
+    if (!chainInfo) {
+      throw new Error(`Invalid chain name: ${chainName}`);
     }
-
+  
     const targetChainId = parseInt(chainInfo.chainId, 16);
-
+  
     try {
       await provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: chainInfo.chainId }],
       });
     } catch (switchError) {
-      console.error(`Error switching network: ${switchError}`);
       if (switchError.code === 4902) {
         try {
           await provider.request({
@@ -296,13 +276,13 @@ export default function Home() {
               },
             ],
           });
-
+          
           await provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: chainInfo.chainId }],
           });
         } catch (addError) {
-          console.error(`Failed to add ${chainInfo.chainName}: ${addError}`);
+          console.error(`Failed to add ${chainInfo.chainName}:`, addError);
           toast({
             title: "Network Addition Failed",
             description: `Failed to add ${chainInfo.chainName}. Please add it manually in your wallet.`,
@@ -310,9 +290,10 @@ export default function Home() {
             duration: 5000,
             isClosable: true,
           });
-          return;
+          throw addError;
         }
       } else {
+        console.error(`Failed to switch to ${chainInfo.chainName}:`, switchError);
         toast({
           title: "Network Switch Failed",
           description: `Failed to switch to ${chainInfo.chainName}. Please switch manually in your wallet.`,
@@ -320,26 +301,21 @@ export default function Home() {
           duration: 5000,
           isClosable: true,
         });
-        return;
+        throw switchError;
       }
     }
-
-    try {
-      await waitForNetworkChange(targetChainId);
-      await initializeProvider();
-
-      toast({
-        title: "Network Switched",
-        description: `Switched to ${chainInfo.chainName}`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (networkError) {
-      console.error(`Error after switching network: ${networkError}`);
-    }
+  
+    await waitForNetworkChange(targetChainId);
+    await initializeProvider();
+  
+    toast({
+      title: "Network Switched",
+      description: `Switched to ${chainInfo.chainName}`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
-
   const signMessage = async () => {
     updateState("messageSigned", true);
     try {
